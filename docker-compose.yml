@@ -1,0 +1,45 @@
+version: "3"
+services:
+  db:
+    container_name: tjv_database
+    env_file:
+      - .env
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - tjv_backend-network
+  backend:
+    env_file:
+      - .env
+    build: .
+    container_name: backend
+    environment:
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_SESSION_JDBC_INITIALIZE_SCHEMA: always
+      SERVER_SERVLET_CONTEXT_PATH: ${CONTEXT_PATH}
+      SERVER_ERROR_WHITELABEL_ENABLED: false
+
+    ports:
+      - "8080:8080"
+    restart: always
+    depends_on:
+      - db
+    networks:
+      - tjv_backend-network
+
+volumes:
+  pgdata:
+networks:
+  tjv_backend-network:
+    driver: bridge
