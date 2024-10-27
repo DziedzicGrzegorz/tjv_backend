@@ -13,7 +13,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - tjv_data:/var/lib/postgresql/data
     networks:
       - tjv_backend-network
   backend:
@@ -39,7 +39,7 @@ services:
       - tjv_backend-network
 
 volumes:
-  pgdata:
+  tjv_data:
 networks:
   tjv_backend-network:
     driver: bridge
