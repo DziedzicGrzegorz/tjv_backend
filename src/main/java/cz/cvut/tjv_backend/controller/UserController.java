@@ -1,15 +1,13 @@
 package cz.cvut.tjv_backend.controller;
 
-import cz.cvut.tjv_backend.dto.UserCreateDto;
-import cz.cvut.tjv_backend.dto.UserDto;
 import cz.cvut.tjv_backend.entity.User;
-import cz.cvut.tjv_backend.mappers.UserMapper;
 import cz.cvut.tjv_backend.service.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,39 +17,69 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
-    private final UserMapper userMapper;
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<UserDto> getUserById(@PathVariable UUID userId) {
-        Optional<User> user = userService.getUserById(userId);
-        return user.map(value -> ResponseEntity.ok(userMapper.toDto(value)))
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    @GetMapping("/username/{username}")
-    public ResponseEntity<UserDto> getUserByUsername(@PathVariable String username) {
-        Optional<User> user = userService.getUserByUsername(username);
-        return user.map(value -> ResponseEntity.ok(userMapper.toDto(value)))
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    @GetMapping("/email/{email}")
-    public ResponseEntity<UserDto> getUserByEmail(@PathVariable String email) {
-        Optional<User> user = userService.getUserByEmail(email);
-        return user.map(value -> ResponseEntity.ok(userMapper.toDto(value)))
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
+    // Create a new User
     @PostMapping
-    public ResponseEntity<UserDto> createUser(@RequestBody UserCreateDto userCreateDto) {
-        User user = userMapper.toEntity(userCreateDto);
-        User savedUser = userService.saveUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(userMapper.toDto(savedUser));
+    public ResponseEntity<User> createUser(@RequestBody User user) {
+        User createdUser = userService.createUser(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
     }
 
-    @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> deleteUser(@PathVariable UUID userId) {
-        userService.deleteUser(userId);
+    // Retrieve a User by ID
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getUserById(@PathVariable UUID id) {
+        Optional<User> user = userService.getUserById(id);
+        return user.map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+    }
+
+    // Retrieve a User by email
+    @GetMapping("/email")
+    public ResponseEntity<User> getUserByEmail(@RequestParam String email) {
+        Optional<User> user = userService.getUserByEmail(email);
+        return user.map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+    }
+
+    // Update a User's username
+    @PutMapping("/{id}/username")
+    public ResponseEntity<Void> updateUsername(@PathVariable UUID id, @RequestParam String username) {
+        userService.updateUsername(id, username);
         return ResponseEntity.noContent().build();
+    }
+
+    // Update a User's email
+    @PutMapping("/{id}/email")
+    public ResponseEntity<Void> updateEmail(@PathVariable UUID id, @RequestParam String email) {
+        userService.updateEmail(id, email);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Update a User's password
+    @PutMapping("/{id}/password")
+    public ResponseEntity<Void> updatePassword(@PathVariable UUID id, @RequestParam String passwordHash) {
+        userService.updatePassword(id, passwordHash);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Delete a User by ID
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUserById(@PathVariable UUID id) {
+        userService.deleteUserById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Delete a User by email
+    @DeleteMapping("/email")
+    public ResponseEntity<Void> deleteUserByEmail(@RequestParam String email) {
+        userService.deleteUserByEmail(email);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Retrieve all Users
+    @GetMapping
+    public ResponseEntity<List<User>> getAllUsers() {
+        List<User> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
     }
 }

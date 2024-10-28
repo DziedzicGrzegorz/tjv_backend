@@ -1,8 +1,7 @@
 package cz.cvut.tjv_backend.controller;
 
-import cz.cvut.tjv_backend.dto.FileDto;
+import cz.cvut.tjv_backend.dto.FileOwnershipDetails;
 import cz.cvut.tjv_backend.entity.File;
-import cz.cvut.tjv_backend.mappers.FileMapper;
 import cz.cvut.tjv_backend.service.FileService;
 import lombok.AllArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -22,45 +21,21 @@ import java.util.UUID;
 public class FileController {
 
     private final FileService fileService;
-    private final FileMapper fileMapper;
 
-
-    @GetMapping(value = "/{fileId}/download", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity<Resource> downloadFile(@PathVariable UUID fileId) {
-        File file = fileService.getFileById(fileId).orElseThrow(() -> new IllegalArgumentException("File not found"));
-
-        Resource fileResource = fileService.getFileAsResource(file);
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
-                .header("File-ID", file.getId().toString())
-                .contentType(MediaType.parseMediaType(file.getFileType()))
-                .body(fileResource);
+    @GetMapping("/{fileId}")
+    public ResponseEntity<File> getFileById(@PathVariable UUID fileId) {
+        return ResponseEntity.ok(fileService.getFileById(fileId));
     }
 
-    @PostMapping(consumes = {"multipart/form-data"})
-    public ResponseEntity<FileDto> uploadFile(
-            @RequestParam("ownerId") UUID ownerId,
-            @RequestParam("file") MultipartFile fileToUpload) {
-
-        File savedFile = fileService.saveFile(ownerId, fileToUpload);
-        FileDto response = fileMapper.toDto(savedFile);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<File> uploadFile(@RequestParam UUID ownerId, @RequestParam MultipartFile file) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(fileService.saveFile(ownerId, file));
     }
 
-    @PutMapping(value = "/{fileId}", consumes = {"multipart/form-data"})
-    public ResponseEntity<FileDto> updateFile(@PathVariable UUID fileId,
-                                              @RequestParam("file") MultipartFile fileToUpdate,
-                                              @RequestParam("ownerId") UUID ownerId) {
-
-
-        File updatedFile = fileService.updateFile(ownerId, fileId, fileToUpdate);
-        FileDto response = fileMapper.toDto(updatedFile);
-
-        return ResponseEntity.ok(response);
+    @PutMapping(value = "/{fileId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<File> updateFile(@PathVariable UUID fileId, @RequestParam UUID userId, @RequestParam MultipartFile updatedFile) {
+        return ResponseEntity.ok(fileService.updateFile(userId, fileId, updatedFile));
     }
-
 
     @DeleteMapping("/{fileId}")
     public ResponseEntity<Void> deleteFile(@PathVariable UUID fileId) {
@@ -68,11 +43,34 @@ public class FileController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping
+    public ResponseEntity<Void> deleteFiles(@RequestBody List<UUID> fileIds) {
+        fileService.deleteFiles(fileIds);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<FileDto>> getFilesOwnedByUser(@PathVariable UUID userId) {
-        List<File> files = fileService.getFilesOwnedByUser(userId);
-        List<FileDto> fileDtos = files.stream().map(fileMapper::toDto).toList();
-        return ResponseEntity.ok(fileDtos);
+    public ResponseEntity<List<File>> getAllFilesByUser(@PathVariable UUID userId) {
+        return ResponseEntity.ok(fileService.getAllFilesByUser(userId));
+    }
+
+    @GetMapping("/user/{userId}/not-shared")
+    public ResponseEntity<List<File>> getFilesNotSharedByUser(@PathVariable UUID userId) {
+        return ResponseEntity.ok(fileService.getFilesNotSharedByUser(userId));
+    }
+
+    @GetMapping("/download/{fileId}")
+    public ResponseEntity<Resource> downloadFile(@PathVariable UUID fileId) {
+        Resource fileResource = fileService.getFileAsResource(fileId);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileId + "\"")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(fileResource);
+    }
+    @GetMapping("/all/{userId}")
+    public ResponseEntity<List<FileOwnershipDetails>> getAllFilesOwnedOrSharedWithUser(@PathVariable UUID userId) {
+        List<FileOwnershipDetails> fileDetails = fileService.getAllFilesOwnedOrSharedWithUser(userId);
+        return ResponseEntity.ok(fileDetails);
     }
 }
 
