@@ -1,73 +1,109 @@
 package cz.cvut.tjv_backend.service;
 
+import cz.cvut.tjv_backend.dto.SharedFileWithGroupDto;
 import cz.cvut.tjv_backend.entity.File;
-import cz.cvut.tjv_backend.entity.SharedFile;
+import cz.cvut.tjv_backend.entity.Group;
+import cz.cvut.tjv_backend.entity.SharedFileWithGroup;
+import cz.cvut.tjv_backend.entity.SharedFileWithUser;
 import cz.cvut.tjv_backend.entity.User;
-import cz.cvut.tjv_backend.repository.FileRepository;
-import cz.cvut.tjv_backend.repository.SharedFileRepository;
-import cz.cvut.tjv_backend.repository.UserRepository;
-import jakarta.transaction.Transactional;
+import cz.cvut.tjv_backend.mappers.SharedFileWithGroupMapper;
+import cz.cvut.tjv_backend.repository.SharedFileWithGroupRepository;
+import cz.cvut.tjv_backend.repository.SharedFileWithUserRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Service
 public class SharedFileService {
 
-    private SharedFileRepository sharedFileRepository;
+    private final SharedFileWithUserRepository sharedFileWithUserRepository;
+    private final SharedFileWithGroupRepository sharedFileWithGroupRepository;
+    private final SharedFileWithGroupMapper sharedFileWithGroupMapper;
 
-    private FileRepository fileRepository;
-
-    private UserRepository userRepository;
-
-    @Transactional
-    public SharedFile shareFileWithUser(UUID ownerId, UUID fileId, UUID targetUserId, String permission) {
-        // Verify that the file exists and is owned by the requesting user
-        Optional<File> fileOptional = fileRepository.findById(fileId);
-        if (fileOptional.isEmpty() || !fileOptional.get().getOwner().getId().equals(ownerId)) {
-            throw new IllegalArgumentException("File not found or user is not the owner");
-        }
-
-        // Verify that the target user exists
-        Optional<User> targetUserOptional = userRepository.findById(targetUserId);
-        if (targetUserOptional.isEmpty()) {
-            throw new IllegalArgumentException("Target user not found");
-        }
-
-        // Check if the file is already shared with the target user
-        boolean alreadyShared = sharedFileRepository.existsByFileIdAndSharedWithId(fileId, targetUserId);
-        if (alreadyShared) {
-            throw new IllegalArgumentException("File is already shared with this user");
-        }
-
-        SharedFile sharedFile = SharedFile.builder()
-                .file(fileOptional.get())
-                .sharedWith(targetUserOptional.get())
+    // Share a file with a user
+    public SharedFileWithUser shareFileWithUser(File file, User user, String permission) {
+        SharedFileWithUser sharedFileWithUser = SharedFileWithUser.builder()
+                .file(file)
+                .sharedWith(user)
                 .permission(permission)
                 .sharedAt(LocalDateTime.now())
                 .build();
-
-        return sharedFileRepository.save(sharedFile);
+        return sharedFileWithUserRepository.save(sharedFileWithUser);
     }
 
-    public List<SharedFile> getFilesSharedWithUser(UUID userId) {
-        return sharedFileRepository.findBySharedWithId(userId);
+    // Share a file with a group
+    public SharedFileWithGroup shareFileWithGroup(File file, Group group, String permission) {
+        SharedFileWithGroup sharedFileWithGroup = SharedFileWithGroup.builder()
+                .file(file)
+                .group(group)
+                .permission(permission)
+                .sharedAt(LocalDateTime.now())
+                .build();
+        return sharedFileWithGroupRepository.save(sharedFileWithGroup);
     }
 
-    public List<SharedFile> getFilesSharedWithGroups(UUID userId) {
-        return sharedFileRepository.findFilesSharedWithGroupsByUser(userId);
+    // Retrieve shared file with user by ID
+    public Optional<SharedFileWithUser> getSharedFileWithUserById(UUID id) {
+        return sharedFileWithUserRepository.findById(id);
     }
 
-    public void deleteSharedFile(UUID sharedFileId) {
-        sharedFileRepository.deleteById(sharedFileId);
+    // Updated service method in SharedFileService
+    public List<SharedFileWithGroupDto> getSharedFileWithGroupById(UUID id) {
+        List<SharedFileWithGroup> sharedFileWithGroup = sharedFileWithGroupRepository.findFilesSharedWithGroup(id);
+        if (sharedFileWithGroup.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared file not found");
+        }
+        return sharedFileWithGroup.stream()
+                .map(sharedFileWithGroupMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    public Optional<SharedFile> getSharedFileById(UUID sharedFileId) {
-        return sharedFileRepository.findById(sharedFileId);
+
+    // Update permissions for a shared file with a user
+    public SharedFileWithUser updateSharedFileWithUser(UUID id, String newPermission) {
+        SharedFileWithUser sharedFileWithUser = sharedFileWithUserRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "SharedFileWithUser not found"));
+        sharedFileWithUser.setPermission(newPermission);
+        return sharedFileWithUserRepository.save(sharedFileWithUser);
+    }
+
+    // Update permissions for a shared file with a group
+    public SharedFileWithGroup updateSharedFileWithGroup(UUID id, String newPermission) {
+        SharedFileWithGroup sharedFileWithGroup = sharedFileWithGroupRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "SharedFileWithGroup not found"));
+        sharedFileWithGroup.setPermission(newPermission);
+        return sharedFileWithGroupRepository.save(sharedFileWithGroup);
+    }
+
+    // Delete shared file with a user
+    public void deleteSharedFileWithUser(UUID id) {
+        SharedFileWithUser sharedFileWithUser = sharedFileWithUserRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "SharedFileWithUser not found"));
+        sharedFileWithUserRepository.delete(sharedFileWithUser);
+    }
+
+    // Delete shared file with a group
+    public void deleteSharedFileWithGroup(UUID id) {
+        SharedFileWithGroup sharedFileWithGroup = sharedFileWithGroupRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "SharedFileWithGroup not found"));
+        sharedFileWithGroupRepository.delete(sharedFileWithGroup);
+    }
+
+    // Find all files shared with a specific user
+    public List<SharedFileWithUser> getFilesSharedWithUser(UUID userId) {
+        return sharedFileWithUserRepository.findFilesSharedWithUser(userId);
+    }
+
+    // Find all files shared with a specific group
+    public List<SharedFileWithGroup> getFilesSharedWithGroup(UUID groupId) {
+        return sharedFileWithGroupRepository.findFilesSharedWithGroup(groupId);
     }
 }

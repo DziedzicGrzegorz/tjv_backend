@@ -1,14 +1,17 @@
 package cz.cvut.tjv_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
 @Entity
 @Table(name = "users")
 @Data
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User {
 
     @Id
@@ -25,20 +28,19 @@ public class User {
     @Column(nullable = false)
     private String passwordHash;
 
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<File> files;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserGroupRole> groupRoles = new HashSet<>();
 
-    @ManyToMany
-    @JoinTable(
-            name = "user_groups",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "group_id")
-    )
-    private Set<Group> groups;
+    @OneToMany(mappedBy = "sharedWith", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<SharedFileWithUser> sharedFiles;
 
-    @OneToMany(mappedBy = "founder", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Group> ownedGroups;
-
-    @ManyToMany(mappedBy = "admins")
-    private Set<Group> adminGroups;
+    @Transient
+    public Set<Group> getGroups() {
+        Set<Group> groups = new HashSet<>();
+        for (UserGroupRole role : groupRoles) {
+            groups.add(role.getGroup());
+        }
+        return groups;
+    }
 }
+

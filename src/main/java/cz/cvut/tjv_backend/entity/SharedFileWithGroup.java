@@ -15,7 +15,7 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @RequiredArgsConstructor
-public class SharedFile {
+public class SharedFileWithGroup {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -27,11 +27,7 @@ public class SharedFile {
     private File file;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "shared_with_user_id", nullable = false)
-    private User sharedWith;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_id")
+    @JoinColumn(name = "group_id", nullable = false)
     private Group group;
 
     @Column(nullable = false)
