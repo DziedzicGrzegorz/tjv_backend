@@ -10,9 +10,9 @@ import java.util.UUID;
  * DTO for {@link cz.cvut.tjv_backend.entity.Group}
  */
 @Value
-public class GroupCreateDto implements Serializable {
-    String name;
-    String description;
-    UUID founderId;
-    Set<String> usersToAdd;
+public class GroupDto implements Serializable {
+     UUID id;
+     String name;
+     String description;
+    Set<UserDto> users;
 }
