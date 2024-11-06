@@ -1,18 +1,21 @@
 package cz.cvut.tjv_backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
 @Table(name = "files")
 @NoArgsConstructor
-@Builder
 @AllArgsConstructor
 @Getter
-@Setter
+@Builder
 public class File {
 
     @Id
@@ -20,7 +23,7 @@ public class File {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
@@ -44,4 +47,10 @@ public class File {
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "file", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<SharedFileWithUser> sharedWithUsers;
+
+    @OneToMany(mappedBy = "file", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<SharedFileWithGroup> sharedWithGroups;
 }

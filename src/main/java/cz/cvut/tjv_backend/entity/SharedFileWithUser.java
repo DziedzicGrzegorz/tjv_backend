@@ -1,21 +1,18 @@
 package cz.cvut.tjv_backend.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "shared_files")
-@Data
-@Builder
+@Table(name = "shared_files_with_user")
 @AllArgsConstructor
 @RequiredArgsConstructor
-public class SharedFile {
+@Getter
+@Builder
+public class SharedFileWithUser {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -24,19 +21,19 @@ public class SharedFile {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "file_id", nullable = false)
+    @Setter
     private File file;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shared_with_user_id", nullable = false)
+    @Setter
     private User sharedWith;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_id")
-    private Group group;
 
     @Column(nullable = false)
     private String permission;
 
     @Column(nullable = false)
     private LocalDateTime sharedAt;
+
 }
+

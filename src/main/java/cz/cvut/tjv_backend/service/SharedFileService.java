@@ -1,73 +1,123 @@
 package cz.cvut.tjv_backend.service;
 
-import cz.cvut.tjv_backend.entity.File;
-import cz.cvut.tjv_backend.entity.SharedFile;
-import cz.cvut.tjv_backend.entity.User;
-import cz.cvut.tjv_backend.repository.FileRepository;
-import cz.cvut.tjv_backend.repository.SharedFileRepository;
-import cz.cvut.tjv_backend.repository.UserRepository;
-import jakarta.transaction.Transactional;
+import cz.cvut.tjv_backend.dto.SharedFileWithGroupDto;
+import cz.cvut.tjv_backend.dto.SharedFileWithUserDto;
+import cz.cvut.tjv_backend.entity.*;
+import cz.cvut.tjv_backend.mapper.SharedFileWithGroupMapper;
+import cz.cvut.tjv_backend.mapper.SharedFileWithUserMapper;
+import cz.cvut.tjv_backend.repository.*;
+import cz.cvut.tjv_backend.request.FileSharingWithGroupRequest;
+import cz.cvut.tjv_backend.request.FileSharingWithUserRequest;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Service
 public class SharedFileService {
 
-    private SharedFileRepository sharedFileRepository;
+    private final SharedFileWithUserRepository sharedFileWithUserRepository;
+    private final SharedFileWithGroupRepository sharedFileWithGroupRepository;
+    private final SharedFileWithGroupMapper sharedFileWithGroupMapper;
+    private final SharedFileWithUserMapper sharedFileWithUserMapper;
+    private final FileRepository fileRepository;
+    private final UserRepository userRepository;
+    private final GroupRepository groupRepository;
 
-    private FileRepository fileRepository;
+    // Share a file with a user
+    public SharedFileWithUserDto shareFileWithUser(FileSharingWithUserRequest request) {
+        // Retrieve the file using the provided file ID
+        File file = fileRepository.findById(request.getFileId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found"));
 
-    private UserRepository userRepository;
+        // Retrieve the user using the provided user ID
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-    @Transactional
-    public SharedFile shareFileWithUser(UUID ownerId, UUID fileId, UUID targetUserId, String permission) {
-        // Verify that the file exists and is owned by the requesting user
-        Optional<File> fileOptional = fileRepository.findById(fileId);
-        if (fileOptional.isEmpty() || !fileOptional.get().getOwner().getId().equals(ownerId)) {
-            throw new IllegalArgumentException("File not found or user is not the owner");
-        }
-
-        // Verify that the target user exists
-        Optional<User> targetUserOptional = userRepository.findById(targetUserId);
-        if (targetUserOptional.isEmpty()) {
-            throw new IllegalArgumentException("Target user not found");
-        }
-
-        // Check if the file is already shared with the target user
-        boolean alreadyShared = sharedFileRepository.existsByFileIdAndSharedWithId(fileId, targetUserId);
-        if (alreadyShared) {
-            throw new IllegalArgumentException("File is already shared with this user");
-        }
-
-        SharedFile sharedFile = SharedFile.builder()
-                .file(fileOptional.get())
-                .sharedWith(targetUserOptional.get())
-                .permission(permission)
+        // Create and save the shared file entity
+        SharedFileWithUser sharedFileWithUser = SharedFileWithUser.builder()
+                .file(file)
+                .sharedWith(user)
+                .permission(request.getPermission())
                 .sharedAt(LocalDateTime.now())
                 .build();
 
-        return sharedFileRepository.save(sharedFile);
+        SharedFileWithUser savedSharedFile = sharedFileWithUserRepository.save(sharedFileWithUser);
+
+        // Return the saved entity as a DTO
+        return sharedFileWithUserMapper.toDto(savedSharedFile);
     }
 
-    public List<SharedFile> getFilesSharedWithUser(UUID userId) {
-        return sharedFileRepository.findBySharedWithId(userId);
+    // Share a file with a group
+    public SharedFileWithGroupDto shareFileWithGroup(FileSharingWithGroupRequest request) {
+        // Implement logic to get File and Group entities by IDs from the request
+        File file = fileRepository.findById(request.getFileId()).orElseThrow(() -> new EntityNotFoundException("File not found"));
+        Group group = groupRepository.findById(request.getGroupId()).orElseThrow(() -> new EntityNotFoundException("Group not found"));
+
+        SharedFileWithGroup sharedFileWithGroup = SharedFileWithGroup.builder()
+                .file(file)
+                .group(group)
+                .permission(request.getPermission())
+                .sharedAt(LocalDateTime.now())
+                .build();
+
+        SharedFileWithGroup savedSharedFile = sharedFileWithGroupRepository.save(sharedFileWithGroup);
+        return sharedFileWithGroupMapper.toDto(savedSharedFile);
     }
 
-    public List<SharedFile> getFilesSharedWithGroups(UUID userId) {
-        return sharedFileRepository.findFilesSharedWithGroupsByUser(userId);
+
+    // Retrieve shared file with user by ID
+    public Optional<SharedFileWithUserDto> getSharedFileWithUserById(UUID id) {
+        Optional<SharedFileWithUser> sharedFileWithUser = sharedFileWithUserRepository.findById(id);
+        return sharedFileWithUser.map(sharedFileWithUserMapper::toDto);
     }
 
-    public void deleteSharedFile(UUID sharedFileId) {
-        sharedFileRepository.deleteById(sharedFileId);
+    // Updated service method in SharedFileService
+    public List<SharedFileWithGroupDto> getSharedFileWithGroupById(UUID id) {
+        List<SharedFileWithGroup> sharedFileWithGroup = sharedFileWithGroupRepository.findFilesSharedWithGroup(id);
+        if (sharedFileWithGroup.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared file not found");
+        }
+        return sharedFileWithGroup.stream()
+                .map(sharedFileWithGroupMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    public Optional<SharedFile> getSharedFileById(UUID sharedFileId) {
-        return sharedFileRepository.findById(sharedFileId);
+    // Delete shared file with a user
+    public void deleteSharedFileWithUser(UUID id) {
+        SharedFileWithUser sharedFileWithUser = sharedFileWithUserRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "SharedFileWithUser not found"));
+        sharedFileWithUserRepository.delete(sharedFileWithUser);
+    }
+
+    // Delete shared file with a group
+    public void deleteSharedFileWithGroup(UUID id) {
+        SharedFileWithGroup sharedFileWithGroup = sharedFileWithGroupRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "SharedFileWithGroup not found"));
+        sharedFileWithGroupRepository.delete(sharedFileWithGroup);
+    }
+
+    // Find all files shared with a specific user
+    public List<SharedFileWithUserDto> getFilesSharedWithUser(UUID userId) {
+        List<SharedFileWithUser> sharedFileWithUser = sharedFileWithUserRepository.findFilesSharedWithUser(userId);
+        return sharedFileWithUser.stream()
+                .map(sharedFileWithUserMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    // Find all files shared with a specific group
+    public List<SharedFileWithGroupDto> getFilesSharedWithGroup(UUID groupId) {
+        List<SharedFileWithGroup> sharedFileWithGroups = sharedFileWithGroupRepository.findFilesSharedWithGroup(groupId);
+        return sharedFileWithGroups.stream()
+                .map(sharedFileWithGroupMapper::toDto)
+                .collect(Collectors.toList());
     }
 }
