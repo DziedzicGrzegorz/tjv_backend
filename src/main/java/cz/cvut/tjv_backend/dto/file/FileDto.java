@@ -1,8 +1,8 @@
-package cz.cvut.tjv_backend.dto;
+package cz.cvut.tjv_backend.dto.file;
 
-import lombok.Builder;
+import cz.cvut.tjv_backend.dto.user.UserShortDto;
+import lombok.Setter;
 import lombok.Value;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -12,15 +12,14 @@ import java.util.UUID;
  * DTO for {@link cz.cvut.tjv_backend.entity.File}
  */
 @Value
-@Builder
+@Setter
 public class FileDto implements Serializable {
-    UserDto owner;
+    UUID id;
+    UserShortDto owner;
     String filename;
     String fileType;
     Long size;
-    UUID id;
     Integer version;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
-    MultipartFile fileContent;
 }

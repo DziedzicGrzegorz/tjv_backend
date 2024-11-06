@@ -1,7 +1,6 @@
 package cz.cvut.tjv_backend.controller;
 
-import cz.cvut.tjv_backend.dto.FileOwnershipDetails;
-import cz.cvut.tjv_backend.entity.File;
+import cz.cvut.tjv_backend.dto.file.FileDto;
 import cz.cvut.tjv_backend.service.FileService;
 import lombok.AllArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -23,17 +22,17 @@ public class FileController {
     private final FileService fileService;
 
     @GetMapping("/{fileId}")
-    public ResponseEntity<File> getFileById(@PathVariable UUID fileId) {
+    public ResponseEntity<FileDto> getFileById(@PathVariable UUID fileId) {
         return ResponseEntity.ok(fileService.getFileById(fileId));
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<File> uploadFile(@RequestParam UUID ownerId, @RequestParam MultipartFile file) {
+    public ResponseEntity<FileDto> uploadFile(@RequestParam UUID ownerId, @RequestParam MultipartFile file) {
         return ResponseEntity.status(HttpStatus.CREATED).body(fileService.saveFile(ownerId, file));
     }
 
     @PutMapping(value = "/{fileId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<File> updateFile(@PathVariable UUID fileId, @RequestParam UUID userId, @RequestParam MultipartFile updatedFile) {
+    public ResponseEntity<FileDto> updateFile(@PathVariable UUID fileId, @RequestParam UUID userId, @RequestParam MultipartFile updatedFile) {
         return ResponseEntity.ok(fileService.updateFile(userId, fileId, updatedFile));
     }
 
@@ -50,12 +49,12 @@ public class FileController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<File>> getAllFilesByUser(@PathVariable UUID userId) {
+    public ResponseEntity<List<FileDto>> getAllFilesByUser(@PathVariable UUID userId) {
         return ResponseEntity.ok(fileService.getAllFilesByUser(userId));
     }
 
     @GetMapping("/user/{userId}/not-shared")
-    public ResponseEntity<List<File>> getFilesNotSharedByUser(@PathVariable UUID userId) {
+    public ResponseEntity<List<FileDto>> getFilesNotSharedByUser(@PathVariable UUID userId) {
         return ResponseEntity.ok(fileService.getFilesNotSharedByUser(userId));
     }
 
@@ -67,9 +66,10 @@ public class FileController {
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(fileResource);
     }
+
     @GetMapping("/all/{userId}")
-    public ResponseEntity<List<FileOwnershipDetails>> getAllFilesOwnedOrSharedWithUser(@PathVariable UUID userId) {
-        List<FileOwnershipDetails> fileDetails = fileService.getAllFilesOwnedOrSharedWithUser(userId);
+    public ResponseEntity<List<FileDto>> getAllFilesOwnedOrSharedWithUser(@PathVariable UUID userId) {
+        List<FileDto> fileDetails = fileService.getAllFilesOwnedOrSharedWithUser(userId);
         return ResponseEntity.ok(fileDetails);
     }
 }

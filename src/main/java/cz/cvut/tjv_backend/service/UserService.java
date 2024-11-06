@@ -1,6 +1,9 @@
 package cz.cvut.tjv_backend.service;
 
+import cz.cvut.tjv_backend.dto.user.UserCreateDto;
+import cz.cvut.tjv_backend.dto.user.UserDto;
 import cz.cvut.tjv_backend.entity.User;
+import cz.cvut.tjv_backend.mapper.UserMapper;
 import cz.cvut.tjv_backend.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -10,29 +13,36 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     // Create a new User
-    public User createUser(User user) {
+    public UserDto createUser(UserCreateDto user) {
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "User with this email already exists");
         }
-        return userRepository.save(user);
+        User newUser = userMapper.toEntity(user);
+        User saveduser = userRepository.save(newUser);
+        return userMapper.toDto(saveduser);
+
     }
 
     // Retrieve a User by ID
-    public Optional<User> getUserById(UUID id) {
-        return userRepository.findById(id);
+    public Optional<UserDto> getUserById(UUID id) {
+        Optional<User> user = userRepository.findById(id);
+        return user.map(userMapper::toDto);
     }
 
     // Retrieve a User by email
-    public Optional<User> getUserByEmail(String email) {
-        return userRepository.findByEmail(email);
+    public Optional<UserDto> getUserByEmail(String email) {
+        Optional<User> user = userRepository.findByEmail(email);
+        return user.map(userMapper::toDto);
     }
 
     // Update a User's username
@@ -79,7 +89,11 @@ public class UserService {
     }
 
     // Retrieve all Users
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserDto> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        //manually map
+        return users.stream()
+                .map(userMapper::toDto)
+                .collect(Collectors.toList());
     }
 }

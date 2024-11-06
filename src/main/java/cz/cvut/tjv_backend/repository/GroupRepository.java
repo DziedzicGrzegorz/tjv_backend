@@ -18,11 +18,11 @@ public interface GroupRepository extends JpaRepository<Group, UUID> {
     // Find group by name (assuming name is unique)
     Optional<Group> findByName(String name);
 
-    // Find group by ID
-    Optional<Group> findById(UUID id);
+    //get all by user id
+    @Query("SELECT g FROM Group g JOIN g.userRoles ugr WHERE ugr.user.id = :userId")
+    List<Group> findAllByUserUserId(@Param("userId") UUID userId);
 
     // Find groups by admin user ID
-// Find groups by admin user ID
     @Query("SELECT ugr.group FROM UserGroupRole ugr WHERE ugr.user.id = :adminId AND ugr.role = 'ADMIN'")
     List<Group> findGroupsByAdminId(@Param("adminId") UUID adminId);
 

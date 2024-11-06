@@ -1,7 +1,10 @@
 package cz.cvut.tjv_backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -10,10 +13,9 @@ import java.util.UUID;
 @Entity
 @Table(name = "files")
 @NoArgsConstructor
-@Builder
 @AllArgsConstructor
 @Getter
-@Setter
+@Builder
 public class File {
 
     @Id

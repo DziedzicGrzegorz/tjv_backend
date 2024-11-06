@@ -1,20 +1,17 @@
 package cz.cvut.tjv_backend.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "shared_files")
-@Data
-@Builder
 @AllArgsConstructor
 @RequiredArgsConstructor
+@Getter
+@Builder
 public class SharedFileWithGroup {
 
     @Id
@@ -24,10 +21,12 @@ public class SharedFileWithGroup {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "file_id", nullable = false)
+    @Setter
     private File file;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", nullable = false)
+    @Setter
     private Group group;
 
     @Column(nullable = false)
@@ -35,4 +34,5 @@ public class SharedFileWithGroup {
 
     @Column(nullable = false)
     private LocalDateTime sharedAt;
+
 }

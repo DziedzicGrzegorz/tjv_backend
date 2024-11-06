@@ -1,10 +1,7 @@
 package cz.cvut.tjv_backend.entity;
 
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -12,8 +9,10 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "groups")
-@Data
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@Getter
+@AllArgsConstructor
+@RequiredArgsConstructor
+@Builder
 public class Group {
 
     @Id
@@ -27,20 +26,14 @@ public class Group {
     @Column
     private String description;
 
-    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.LAZY)
-    @JsonManagedReference
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Setter
+    @Builder.Default
     private Set<UserGroupRole> userRoles = new HashSet<>();
 
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Setter
     private Set<SharedFileWithGroup> sharedFiles;
 
-    @Transient
-    public Set<User> getUsers() {
-        Set<User> users = new HashSet<>();
-        for (UserGroupRole role : userRoles) {
-            users.add(role.getUser());
-        }
-        return users;
-    }
 }
 

@@ -1,14 +1,14 @@
 package cz.cvut.tjv_backend.service;
 
 import cz.cvut.tjv_backend.dto.SharedFileWithGroupDto;
-import cz.cvut.tjv_backend.entity.File;
-import cz.cvut.tjv_backend.entity.Group;
-import cz.cvut.tjv_backend.entity.SharedFileWithGroup;
-import cz.cvut.tjv_backend.entity.SharedFileWithUser;
-import cz.cvut.tjv_backend.entity.User;
-import cz.cvut.tjv_backend.mappers.SharedFileWithGroupMapper;
-import cz.cvut.tjv_backend.repository.SharedFileWithGroupRepository;
-import cz.cvut.tjv_backend.repository.SharedFileWithUserRepository;
+import cz.cvut.tjv_backend.dto.SharedFileWithUserDto;
+import cz.cvut.tjv_backend.entity.*;
+import cz.cvut.tjv_backend.mapper.SharedFileWithGroupMapper;
+import cz.cvut.tjv_backend.mapper.SharedFileWithUserMapper;
+import cz.cvut.tjv_backend.repository.*;
+import cz.cvut.tjv_backend.request.FileSharingWithGroupRequest;
+import cz.cvut.tjv_backend.request.FileSharingWithUserRequest;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -27,32 +27,57 @@ public class SharedFileService {
     private final SharedFileWithUserRepository sharedFileWithUserRepository;
     private final SharedFileWithGroupRepository sharedFileWithGroupRepository;
     private final SharedFileWithGroupMapper sharedFileWithGroupMapper;
+    private final SharedFileWithUserMapper sharedFileWithUserMapper;
+    private final FileRepository fileRepository;
+    private final UserRepository userRepository;
+    private final GroupRepository groupRepository;
 
     // Share a file with a user
-    public SharedFileWithUser shareFileWithUser(File file, User user, String permission) {
+    public SharedFileWithUserDto shareFileWithUser(FileSharingWithUserRequest request) {
+        // Retrieve the file using the provided file ID
+        File file = fileRepository.findById(request.getFileId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found"));
+
+        // Retrieve the user using the provided user ID
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        // Create and save the shared file entity
         SharedFileWithUser sharedFileWithUser = SharedFileWithUser.builder()
                 .file(file)
                 .sharedWith(user)
-                .permission(permission)
+                .permission(request.getPermission())
                 .sharedAt(LocalDateTime.now())
                 .build();
-        return sharedFileWithUserRepository.save(sharedFileWithUser);
+
+        SharedFileWithUser savedSharedFile = sharedFileWithUserRepository.save(sharedFileWithUser);
+
+        // Return the saved entity as a DTO
+        return sharedFileWithUserMapper.toDto(savedSharedFile);
     }
 
     // Share a file with a group
-    public SharedFileWithGroup shareFileWithGroup(File file, Group group, String permission) {
+    public SharedFileWithGroupDto shareFileWithGroup(FileSharingWithGroupRequest request) {
+        // Implement logic to get File and Group entities by IDs from the request
+        File file = fileRepository.findById(request.getFileId()).orElseThrow(() -> new EntityNotFoundException("File not found"));
+        Group group = groupRepository.findById(request.getGroupId()).orElseThrow(() -> new EntityNotFoundException("Group not found"));
+
         SharedFileWithGroup sharedFileWithGroup = SharedFileWithGroup.builder()
                 .file(file)
                 .group(group)
-                .permission(permission)
+                .permission(request.getPermission())
                 .sharedAt(LocalDateTime.now())
                 .build();
-        return sharedFileWithGroupRepository.save(sharedFileWithGroup);
+
+        SharedFileWithGroup savedSharedFile = sharedFileWithGroupRepository.save(sharedFileWithGroup);
+        return sharedFileWithGroupMapper.toDto(savedSharedFile);
     }
 
+
     // Retrieve shared file with user by ID
-    public Optional<SharedFileWithUser> getSharedFileWithUserById(UUID id) {
-        return sharedFileWithUserRepository.findById(id);
+    public Optional<SharedFileWithUserDto> getSharedFileWithUserById(UUID id) {
+        Optional<SharedFileWithUser> sharedFileWithUser = sharedFileWithUserRepository.findById(id);
+        return sharedFileWithUser.map(sharedFileWithUserMapper::toDto);
     }
 
     // Updated service method in SharedFileService
@@ -64,23 +89,6 @@ public class SharedFileService {
         return sharedFileWithGroup.stream()
                 .map(sharedFileWithGroupMapper::toDto)
                 .collect(Collectors.toList());
-    }
-
-
-    // Update permissions for a shared file with a user
-    public SharedFileWithUser updateSharedFileWithUser(UUID id, String newPermission) {
-        SharedFileWithUser sharedFileWithUser = sharedFileWithUserRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "SharedFileWithUser not found"));
-        sharedFileWithUser.setPermission(newPermission);
-        return sharedFileWithUserRepository.save(sharedFileWithUser);
-    }
-
-    // Update permissions for a shared file with a group
-    public SharedFileWithGroup updateSharedFileWithGroup(UUID id, String newPermission) {
-        SharedFileWithGroup sharedFileWithGroup = sharedFileWithGroupRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "SharedFileWithGroup not found"));
-        sharedFileWithGroup.setPermission(newPermission);
-        return sharedFileWithGroupRepository.save(sharedFileWithGroup);
     }
 
     // Delete shared file with a user
@@ -98,12 +106,18 @@ public class SharedFileService {
     }
 
     // Find all files shared with a specific user
-    public List<SharedFileWithUser> getFilesSharedWithUser(UUID userId) {
-        return sharedFileWithUserRepository.findFilesSharedWithUser(userId);
+    public List<SharedFileWithUserDto> getFilesSharedWithUser(UUID userId) {
+        List<SharedFileWithUser> sharedFileWithUser = sharedFileWithUserRepository.findFilesSharedWithUser(userId);
+        return sharedFileWithUser.stream()
+                .map(sharedFileWithUserMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     // Find all files shared with a specific group
-    public List<SharedFileWithGroup> getFilesSharedWithGroup(UUID groupId) {
-        return sharedFileWithGroupRepository.findFilesSharedWithGroup(groupId);
+    public List<SharedFileWithGroupDto> getFilesSharedWithGroup(UUID groupId) {
+        List<SharedFileWithGroup> sharedFileWithGroups = sharedFileWithGroupRepository.findFilesSharedWithGroup(groupId);
+        return sharedFileWithGroups.stream()
+                .map(sharedFileWithGroupMapper::toDto)
+                .collect(Collectors.toList());
     }
 }

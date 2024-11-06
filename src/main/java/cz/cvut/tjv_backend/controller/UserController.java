@@ -1,6 +1,7 @@
 package cz.cvut.tjv_backend.controller;
 
-import cz.cvut.tjv_backend.entity.User;
+import cz.cvut.tjv_backend.dto.user.UserCreateDto;
+import cz.cvut.tjv_backend.dto.user.UserDto;
 import cz.cvut.tjv_backend.service.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,23 +21,23 @@ public class UserController {
 
     // Create a new User
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        User createdUser = userService.createUser(user);
+    public ResponseEntity<UserDto> createUser(@RequestBody UserCreateDto user) {
+        UserDto createdUser = userService.createUser(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
     }
 
     // Retrieve a User by ID
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable UUID id) {
-        Optional<User> user = userService.getUserById(id);
+    public ResponseEntity<UserDto> getUserById(@PathVariable UUID id) {
+        Optional<UserDto> user = userService.getUserById(id);
         return user.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
     // Retrieve a User by email
     @GetMapping("/email")
-    public ResponseEntity<User> getUserByEmail(@RequestParam String email) {
-        Optional<User> user = userService.getUserByEmail(email);
+    public ResponseEntity<UserDto> getUserByEmail(@RequestParam String email) {
+        Optional<UserDto> user = userService.getUserByEmail(email);
         return user.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
@@ -78,8 +79,8 @@ public class UserController {
 
     // Retrieve all Users
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userService.getAllUsers();
+    public ResponseEntity<List<UserDto>> getAllUsers() {
+        List<UserDto> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
 }

@@ -1,6 +1,5 @@
 package cz.cvut.tjv_backend.repository;
 
-import cz.cvut.tjv_backend.dto.FileOwnershipDetails;
 import cz.cvut.tjv_backend.entity.File;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -14,6 +13,7 @@ import java.util.UUID;
 @Repository
 public interface FileRepository extends JpaRepository<File, UUID> {
 
+    //    findAll bu return dto
     // Find files by owner ID
     @Query("SELECT f FROM File f WHERE f.owner.id = :ownerId")
     List<File> findFilesByOwnerId(@Param("ownerId") UUID ownerId);

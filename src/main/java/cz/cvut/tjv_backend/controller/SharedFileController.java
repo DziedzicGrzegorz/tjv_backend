@@ -1,8 +1,9 @@
 package cz.cvut.tjv_backend.controller;
 
 import cz.cvut.tjv_backend.dto.SharedFileWithGroupDto;
-import cz.cvut.tjv_backend.entity.SharedFileWithGroup;
-import cz.cvut.tjv_backend.entity.SharedFileWithUser;
+import cz.cvut.tjv_backend.dto.SharedFileWithUserDto;
+import cz.cvut.tjv_backend.request.FileSharingWithGroupRequest;
+import cz.cvut.tjv_backend.request.FileSharingWithUserRequest;
 import cz.cvut.tjv_backend.service.SharedFileService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,22 +24,22 @@ public class SharedFileController {
 
     // Share a file with a user
     @PostMapping("/user")
-    public ResponseEntity<SharedFileWithUser> shareFileWithUser(@RequestBody SharedFileWithUser sharedFileWithUser) {
-        SharedFileWithUser createdSharedFile = sharedFileService.shareFileWithUser(sharedFileWithUser.getFile(), sharedFileWithUser.getSharedWith(), sharedFileWithUser.getPermission());
+    public ResponseEntity<SharedFileWithUserDto> shareFileWithUser(@RequestBody FileSharingWithUserRequest sharedFileWithUser) {
+        SharedFileWithUserDto createdSharedFile = sharedFileService.shareFileWithUser(sharedFileWithUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdSharedFile);
     }
 
     // Share a file with a group
     @PostMapping("/group")
-    public ResponseEntity<SharedFileWithGroup> shareFileWithGroup(@RequestBody SharedFileWithGroup sharedFileWithGroup) {
-        SharedFileWithGroup createdSharedFile = sharedFileService.shareFileWithGroup(sharedFileWithGroup.getFile(), sharedFileWithGroup.getGroup(), sharedFileWithGroup.getPermission());
+    public ResponseEntity<SharedFileWithGroupDto> shareFileWithGroup(@RequestBody FileSharingWithGroupRequest sharedFileWithGroup) {
+        SharedFileWithGroupDto createdSharedFile = sharedFileService.shareFileWithGroup(sharedFileWithGroup);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdSharedFile);
     }
 
     // Retrieve shared file with user by ID
     @GetMapping("/user/{id}")
-    public ResponseEntity<SharedFileWithUser> getSharedFileWithUserById(@PathVariable UUID id) {
-        Optional<SharedFileWithUser> sharedFileWithUser = sharedFileService.getSharedFileWithUserById(id);
+    public ResponseEntity<SharedFileWithUserDto> getSharedFileWithUserById(@PathVariable UUID id) {
+        Optional<SharedFileWithUserDto> sharedFileWithUser = sharedFileService.getSharedFileWithUserById(id);
         return sharedFileWithUser.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
@@ -51,21 +52,6 @@ public class SharedFileController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared file not found");
         }
         return ResponseEntity.ok(sharedFileWithGroup);
-    }
-
-
-    // Update permissions for a shared file with a user
-    @PutMapping("/user/{id}")
-    public ResponseEntity<SharedFileWithUser> updateSharedFileWithUser(@PathVariable UUID id, @RequestParam String newPermission) {
-        SharedFileWithUser updatedSharedFile = sharedFileService.updateSharedFileWithUser(id, newPermission);
-        return ResponseEntity.ok(updatedSharedFile);
-    }
-
-    // Update permissions for a shared file with a group
-    @PutMapping("/group/{id}")
-    public ResponseEntity<SharedFileWithGroup> updateSharedFileWithGroup(@PathVariable UUID id, @RequestParam String newPermission) {
-        SharedFileWithGroup updatedSharedFile = sharedFileService.updateSharedFileWithGroup(id, newPermission);
-        return ResponseEntity.ok(updatedSharedFile);
     }
 
     // Delete shared file with a user
@@ -84,15 +70,15 @@ public class SharedFileController {
 
     // Find all files shared with a specific user
     @GetMapping("/user")
-    public ResponseEntity<List<SharedFileWithUser>> getFilesSharedWithUser(@RequestParam UUID userId) {
-        List<SharedFileWithUser> sharedFiles = sharedFileService.getFilesSharedWithUser(userId);
+    public ResponseEntity<List<SharedFileWithUserDto>> getFilesSharedWithUser(@RequestParam UUID userId) {
+        List<SharedFileWithUserDto> sharedFiles = sharedFileService.getFilesSharedWithUser(userId);
         return ResponseEntity.ok(sharedFiles);
     }
 
     // Find all files shared with a specific group
     @GetMapping("/group")
-    public ResponseEntity<List<SharedFileWithGroup>> getFilesSharedWithGroup(@RequestParam UUID groupId) {
-        List<SharedFileWithGroup> sharedFiles = sharedFileService.getFilesSharedWithGroup(groupId);
+    public ResponseEntity<List<SharedFileWithGroupDto>> getFilesSharedWithGroup(@RequestParam UUID groupId) {
+        List<SharedFileWithGroupDto> sharedFiles = sharedFileService.getFilesSharedWithGroup(groupId);
         return ResponseEntity.ok(sharedFiles);
     }
 }
