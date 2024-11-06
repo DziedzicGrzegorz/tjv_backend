@@ -1,0 +1,99 @@
+### Create User
+POST http://localhost:8080/api/v1/users
+Content-Type: application/json
+
+{
+  "username": "123465",
+  "email": "12346@example.com",
+  "passwordHash": "password123"
+}
+
+> {%
+    client.test("User created successfully", function () {
+        client.assert(response.status === 201, "Response status is not 201");
+        client.assert(response.body.hasOwnProperty("id"), "Response body does not contain 'id'");
+    });
+%}
+
+### Get User by ID
+GET http://localhost:8080/api/v1/users/{{userId}}
+Content-Type: application/json
+
+> {%
+    client.test("User retrieved successfully", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body.hasOwnProperty("username"), "Response body does not contain 'username'");
+    });
+%}
+
+### Get User by Email
+GET http://localhost:8080/api/v1/users/email?email=new_user@example.com
+Content-Type: application/json
+
+> {%
+    client.test("User retrieved successfully by email", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body.email === "new_user@example.com", "Email does not match");
+    });
+%}
+
+### Update User's Username
+PUT http://localhost:8080/api/v1/users/{{userId}}/username?username=updated_user
+Content-Type: application/json
+
+> {%
+    client.test("Username updated successfully", function () {
+        client.assert(response.status === 204, "Response status is not 204");
+    });
+%}
+
+### Update User's Email
+PUT http://localhost:8080/api/v1/users/{{userId}}/email?email=updated_user@example.com
+Content-Type: application/json
+
+> {%
+    client.test("Email updated successfully", function () {
+        client.assert(response.status === 204, "Response status is not 204");
+    });
+%}
+
+### Update User's Password
+PUT http://localhost:8080/api/v1/users/{{userId}}/password?passwordHash=new_password123
+Content-Type: application/json
+
+> {%
+    client.test("Password updated successfully", function () {
+        client.assert(response.status === 204, "Response status is not 204");
+    });
+%}
+
+### Delete User by ID
+DELETE http://localhost:8080/api/v1/users/{{userId}}
+Content-Type: application/json
+
+> {%
+    client.test("User deleted successfully by ID", function () {
+        client.assert(response.status === 204, "Response status is not 204");
+    });
+%}
+
+### Delete User by Email
+DELETE http://localhost:8080/api/v1/users/email?email=new_user@example.com
+Content-Type: application/json
+
+> {%
+    client.test("User deleted successfully by email", function () {
+        client.assert(response.status === 204, "Response status is not 204");
+    });
+%}
+
+### Get All Users
+GET http://localhost:8080/api/v1/users
+Content-Type: application/json
+
+> {%
+    client.test("All users retrieved successfully", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(Array.isArray(response.body), "Response body is not an array");
+    });
+%}

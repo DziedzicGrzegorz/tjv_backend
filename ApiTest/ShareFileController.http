@@ -1,0 +1,89 @@
+### Share a file with a user
+POST http://localhost:8080/api/v1/shared-files/user
+Content-Type: application/json
+
+{
+  "fileId": "3cd966a4-6e7d-4760-bb4f-6250efe3edbd",
+  "userId": "ea7b9098-6fae-4fd0-83b5-60cbf7d3ca62",
+  "permission": "READ"
+}
+
+> {%
+    client.test("Share File with User", function() {
+        client.assert(response.status === 201, "Expected status 201, got " + response.status);
+        client.assert(response.body.id !== undefined, "Response does not contain 'id'");
+    });
+%}
+
+### Share a file with a group
+POST http://localhost:8080/api/v1/shared-files/group
+Content-Type: application/json
+
+{
+  "fileId": "b41214ee-a78d-45d0-a52b-439cfd03f90e",
+  "groupId": "9c32f950-a1f1-42d9-a468-91daf5bccbd5",
+  "permission": "READ"
+}
+
+> {%
+    client.test("Share File with Group", function() {
+        client.assert(response.status === 201, "Expected status 201, got " + response.status);
+        client.assert(response.body.id !== undefined, "Response does not contain 'id'");
+    });
+%}
+
+### Retrieve shared file with user by ID
+GET http://localhost:8080/api/v1/shared-files/user/{{sharedFileUserId}}
+
+> {%
+    client.test("Get Shared File with User by ID", function() {
+        client.assert(response.status === 200, "Expected status 200, got " + response.status);
+    });
+%}
+
+### Retrieve shared file with group by ID
+GET http://localhost:8080/api/v1/shared-files/group/{{sharedFileGroupId}}
+
+> {%
+    client.test("Get Shared File with Group by ID", function() {
+        client.assert(response.status === 200, "Expected status 200, got " + response.status);
+    });
+%}
+
+### Delete shared file with a user
+DELETE http://localhost:8080/api/v1/shared-files/user/{{sharedFileUserId}}
+
+> {%
+    client.test("Delete Shared File with User", function() {
+        client.assert(response.status === 204, "Expected status 204, got " + response.status);
+    });
+%}
+
+### Delete shared file with a group
+DELETE http://localhost:8080/api/v1/shared-files/group/{{sharedFileGroupId}}
+
+> {%
+    client.test("Delete Shared File with Group", function() {
+        client.assert(response.status === 204, "Expected status 204, got " + response.status);
+    });
+%}
+
+### Find all files shared with a specific user
+GET http://localhost:8080/api/v1/shared-files/user?userId={{userId}}
+
+> {%
+    client.test("Get Files Shared with User", function() {
+        client.assert(response.status === 200, "Expected status 200, got " + response.status);
+        client.assert(Array.isArray(response.body), "Response body is not an array");
+    });
+%}
+
+### Find all files shared with a specific group
+GET http://localhost:8080/api/v1/shared-files/group?groupId={{groupId}}
+
+> {%
+    client.test("Get Files Shared with Group", function() {
+        client.assert(response.status === 200, "Expected status 200, got " + response.status);
+        client.assert(Array.isArray(response.body), "Response body is not an array");
+    });
+%}
