@@ -1,36 +1,47 @@
 package cz.cvut.tjv_backend.service;
 
+import cz.cvut.tjv_backend.dto.file.FileDto;
 import cz.cvut.tjv_backend.entity.File;
 import cz.cvut.tjv_backend.entity.User;
+import cz.cvut.tjv_backend.mapper.FileMapper;
 import cz.cvut.tjv_backend.repository.FileRepository;
+import cz.cvut.tjv_backend.repository.SharedFileWithGroupRepository;
+import cz.cvut.tjv_backend.repository.SharedFileWithUserRepository;
+import cz.cvut.tjv_backend.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Service
 public class FileService {
 
-    private FileRepository fileRepository;
-    private UserService userService;
+    private final FileRepository fileRepository;
+    private final SharedFileWithUserRepository sharedFileWithUserRepository;
+    private final SharedFileWithGroupRepository sharedFileWithGroupRepository;
+    private final UserService userService;
+    private final FileMapper fileMapper;
+    private final UserRepository userRepository;
 
-    public Optional<File> getFileById(UUID fileId) {
-        return fileRepository.findById(fileId);
+    public FileDto getFileById(UUID fileId) {
+        File file = fileRepository.findById(fileId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found"));
+
+        return fileMapper.toDto(file);
     }
 
-    public File saveFile(UUID ownerId,MultipartFile file) {
-        User user = userService.getUserById(ownerId).orElseThrow(() -> new IllegalArgumentException("User not found"));
+    public FileDto saveFile(UUID ownerId, MultipartFile file) {
+        User user = userRepository.findById(ownerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
         File newFile = File.builder()
                 .owner(user)
@@ -43,49 +54,80 @@ public class FileService {
                 .version(1)
                 .build();
 
-        return fileRepository.save(newFile);
+        File savedFile = fileRepository.save(newFile);
+        return fileMapper.toDto(savedFile);
     }
 
-    public File updateFile(UUID founderId,UUID fileId, MultipartFile updatedFile) {
-        userService.getUserById(founderId).orElseThrow(() -> new IllegalArgumentException("User not found"));
-        File file = fileRepository.findById(fileId).orElseThrow(() -> new IllegalArgumentException("File not found"));
+    public FileDto updateFile(UUID userId, UUID fileId, MultipartFile updatedFile) {
+        userService.getUserById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        File file = fileRepository.findById(fileId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found"));
 
-        //TODO uploading new file
 
-        file.setFilename(updatedFile.getOriginalFilename());
-        file.setFileType(updatedFile.getContentType());
-        file.setSize(updatedFile.getSize());
-        file.setBlobUrl("files/" + updatedFile.getOriginalFilename());
-        file.setUpdatedAt(LocalDateTime.now());
-        file.setVersion(file.getVersion() + 1);
-
-        return fileRepository.save(file);
+        File updateFile = File.builder()
+                .id(fileId)
+                .filename(updatedFile.getOriginalFilename())
+                .fileType(updatedFile.getContentType())
+                .size(updatedFile.getSize())
+                .blobUrl("files/" + updatedFile.getOriginalFilename())
+                .owner(file.getOwner())
+                .createdAt(file.getCreatedAt())
+                .sharedWithUsers(file.getSharedWithUsers())
+                .sharedWithGroups(file.getSharedWithGroups())
+                .updatedAt(LocalDateTime.now())
+                .version(file.getVersion() + 1)
+                .build();
+        File savedFile = fileRepository.save(updateFile);
+        return fileMapper.toDto(savedFile);
     }
 
     public void deleteFile(UUID fileId) {
-        fileRepository.deleteById(fileId);
+        File file = fileRepository.findById(fileId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found"));
+        fileRepository.delete(file);
     }
 
     public void deleteFiles(List<UUID> fileIds) {
-        fileRepository.deleteAllById(fileIds);
-    }
-
-    public List<File> getAllFilesByUser(UUID userId) {
-        return fileRepository.findAllFilesByUserId(userId);
-    }
-
-    public List<File> getFilesOwnedByUser(UUID userId) {
-        return fileRepository.findFilesOwnedByUser(userId);
-    }
-
-    public Resource getFileAsResource(File file) {
-        try {
-            Path path = Paths.get(file.getBlobUrl());
-            byte[] data = Files.readAllBytes(path);
-            return new ByteArrayResource(data);
-        } catch (IOException e) {
-            throw new IllegalArgumentException("File not found");
+        List<File> files = fileRepository.findAllById(fileIds);
+        if (files.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No files found to delete");
         }
+        fileRepository.deleteAll(files);
+    }
+
+    public List<FileDto> getAllFilesByUser(UUID userId) {
+        userService.getUserById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        List<File> files = fileRepository.findFilesByOwnerId(userId);
+        return files.stream()
+                .map(fileMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<FileDto> getFilesNotSharedByUser(UUID userId) {
+        userService.getUserById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        List<File> files = fileRepository.findFilesNotShared(userId);
+
+        return files.stream()
+                .map(fileMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    public Resource getFileAsResource(UUID fileId) {
+        File file = fileRepository.findById(fileId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found"));
+        // TODO: Implement fetching the file data from storage (currently placeholder)
+        byte[] data = "sample file content".getBytes();
+        return new ByteArrayResource(data);
+    }
+
+    public List<FileDto> getAllFilesOwnedOrSharedWithUser(UUID userId) {
+        List<File> files = fileRepository.findAllFilesOwnedOrSharedWithUser(userId);
+        return files.stream()
+                .map(fileMapper::toDto)
+                .collect(Collectors.toList());
+
     }
 }
-

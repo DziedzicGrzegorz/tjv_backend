@@ -1,14 +1,21 @@
 package cz.cvut.tjv_backend.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
 @Entity
 @Table(name = "users")
-@Data
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class User {
 
     @Id
@@ -25,20 +32,11 @@ public class User {
     @Column(nullable = false)
     private String passwordHash;
 
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<File> files;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<UserGroupRole> groupRoles = new HashSet<>();
 
-    @ManyToMany
-    @JoinTable(
-            name = "user_groups",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "group_id")
-    )
-    private Set<Group> groups;
-
-    @OneToMany(mappedBy = "founder", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Group> ownedGroups;
-
-    @ManyToMany(mappedBy = "admins")
-    private Set<Group> adminGroups;
+    @OneToMany(mappedBy = "sharedWith", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<SharedFileWithUser> sharedFiles;
 }
+
