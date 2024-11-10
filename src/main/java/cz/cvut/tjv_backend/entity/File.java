@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -19,7 +20,6 @@ import java.util.UUID;
 public class File {
 
     @Id
-    @GeneratedValue(generator = "UUID")
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
@@ -53,4 +53,11 @@ public class File {
 
     @OneToMany(mappedBy = "file", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<SharedFileWithGroup> sharedWithGroups;
+
+    @PrePersist
+    protected void onCreate() {
+        if (Objects.isNull(this.id)) {
+            this.id = UUID.randomUUID();
+        }
+    }
 }
