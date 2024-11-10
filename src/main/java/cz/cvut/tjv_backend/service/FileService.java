@@ -1,5 +1,9 @@
 package cz.cvut.tjv_backend.service;
 
+import com.azure.storage.blob.BlobClient;
+import com.azure.storage.blob.BlobContainerClient;
+import com.azure.storage.queue.QueueClient;
+import com.azure.storage.queue.models.QueueMessageItem;
 import cz.cvut.tjv_backend.dto.file.FileDto;
 import cz.cvut.tjv_backend.entity.File;
 import cz.cvut.tjv_backend.entity.User;
@@ -16,6 +20,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -31,6 +37,8 @@ public class FileService {
     private final UserService userService;
     private final FileMapper fileMapper;
     private final UserRepository userRepository;
+    private final BlobContainerClient blobContainerClient;
+    private final QueueClient queueClient;
 
     public FileDto getFileById(UUID fileId) {
         File file = fileRepository.findById(fileId)
@@ -43,20 +51,36 @@ public class FileService {
         User user = userRepository.findById(ownerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        File newFile = File.builder()
-                .owner(user)
-                .filename(file.getOriginalFilename())
-                .fileType(file.getContentType())
-                .size(file.getSize())
-                .blobUrl("files/" + file.getOriginalFilename())
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .version(1)
-                .build();
+        UUID fileId = UUID.randomUUID();
 
-        File savedFile = fileRepository.save(newFile);
-        return fileMapper.toDto(savedFile);
+        if(fileRepository.existsById(fileId)) {
+            fileId = UUID.randomUUID();
+        }
+        try {
+            String blobPath = ownerId + "/" + fileId;
+            BlobClient blobClient = blobContainerClient.getBlobClient(blobPath);
+            blobClient.upload(file.getInputStream(), file.getSize(), true);
+
+            File newFile = File.builder()
+                    .id(fileId)
+                    .owner(user)
+                    .filename(file.getOriginalFilename())
+                    .fileType(file.getContentType())
+                    .size(file.getSize())
+                    .blobUrl(blobPath)
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .version(1)
+                    .build();
+
+            File savedFile = fileRepository.save(newFile);
+
+            return fileMapper.toDto(savedFile);
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error uploading file to Azure Blob Storage", e);
+        }
     }
+
 
     public FileDto updateFile(UUID userId, UUID fileId, MultipartFile updatedFile) {
         userService.getUserById(userId)
@@ -64,13 +88,19 @@ public class FileService {
         File file = fileRepository.findById(fileId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found"));
 
+        try {
+            BlobClient blobClient = blobContainerClient.getBlobClient(userId + "/" + updatedFile.getOriginalFilename());
+            blobClient.upload(updatedFile.getInputStream(), updatedFile.getSize(), true);
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error updating file in Azure Blob Storage", e);
+        }
 
         File updateFile = File.builder()
                 .id(fileId)
                 .filename(updatedFile.getOriginalFilename())
                 .fileType(updatedFile.getContentType())
                 .size(updatedFile.getSize())
-                .blobUrl("files/" + updatedFile.getOriginalFilename())
+                .blobUrl(userId + "/" + updatedFile.getOriginalFilename())
                 .owner(file.getOwner())
                 .createdAt(file.getCreatedAt())
                 .sharedWithUsers(file.getSharedWithUsers())
@@ -85,6 +115,8 @@ public class FileService {
     public void deleteFile(UUID fileId) {
         File file = fileRepository.findById(fileId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found"));
+        BlobClient blobClient = blobContainerClient.getBlobClient(file.getBlobUrl());
+        blobClient.delete();
         fileRepository.delete(file);
     }
 
@@ -92,6 +124,10 @@ public class FileService {
         List<File> files = fileRepository.findAllById(fileIds);
         if (files.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No files found to delete");
+        }
+        for (File file : files) {
+            BlobClient blobClient = blobContainerClient.getBlobClient(file.getBlobUrl());
+            blobClient.delete();
         }
         fileRepository.deleteAll(files);
     }
@@ -118,9 +154,16 @@ public class FileService {
     public Resource getFileAsResource(UUID fileId) {
         File file = fileRepository.findById(fileId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found"));
-        // TODO: Implement fetching the file data from storage (currently placeholder)
-        byte[] data = "sample file content".getBytes();
-        return new ByteArrayResource(data);
+
+        try {
+            BlobClient blobClient = blobContainerClient.getBlobClient(file.getBlobUrl());
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            blobClient.downloadStream(outputStream);
+            byte[] data = outputStream.toByteArray();
+            return new ByteArrayResource(data);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error retrieving file from Azure Blob Storage", e);
+        }
     }
 
     public List<FileDto> getAllFilesOwnedOrSharedWithUser(UUID userId) {
