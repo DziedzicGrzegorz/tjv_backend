@@ -2,7 +2,8 @@ package cz.cvut.tjv_backend.service;
 
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
-import com.azure.storage.blob.BlobServiceClient;
+import com.azure.storage.queue.QueueClient;
+import com.azure.storage.queue.models.QueueMessageItem;
 import cz.cvut.tjv_backend.dto.file.FileDto;
 import cz.cvut.tjv_backend.entity.File;
 import cz.cvut.tjv_backend.entity.User;
@@ -36,8 +37,8 @@ public class FileService {
     private final UserService userService;
     private final FileMapper fileMapper;
     private final UserRepository userRepository;
-    private final BlobServiceClient blobServiceClient;
     private final BlobContainerClient blobContainerClient;
+    private final QueueClient queueClient;
 
     public FileDto getFileById(UUID fileId) {
         File file = fileRepository.findById(fileId)
@@ -50,27 +51,36 @@ public class FileService {
         User user = userRepository.findById(ownerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
+        UUID fileId = UUID.randomUUID();
+
+        if(fileRepository.existsById(fileId)) {
+            fileId = UUID.randomUUID();
+        }
         try {
-            BlobClient blobClient = blobContainerClient.getBlobClient(ownerId + "/" + file.getOriginalFilename());
+            String blobPath = ownerId + "/" + fileId;
+            BlobClient blobClient = blobContainerClient.getBlobClient(blobPath);
             blobClient.upload(file.getInputStream(), file.getSize(), true);
+
+            File newFile = File.builder()
+                    .id(fileId)
+                    .owner(user)
+                    .filename(file.getOriginalFilename())
+                    .fileType(file.getContentType())
+                    .size(file.getSize())
+                    .blobUrl(blobPath)
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .version(1)
+                    .build();
+
+            File savedFile = fileRepository.save(newFile);
+
+            return fileMapper.toDto(savedFile);
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error uploading file to Azure Blob Storage", e);
         }
-
-        File newFile = File.builder()
-                .owner(user)
-                .filename(file.getOriginalFilename())
-                .fileType(file.getContentType())
-                .size(file.getSize())
-                .blobUrl(ownerId + "/" + file.getOriginalFilename())
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .version(1)
-                .build();
-
-        File savedFile = fileRepository.save(newFile);
-        return fileMapper.toDto(savedFile);
     }
+
 
     public FileDto updateFile(UUID userId, UUID fileId, MultipartFile updatedFile) {
         userService.getUserById(userId)
@@ -148,7 +158,7 @@ public class FileService {
         try {
             BlobClient blobClient = blobContainerClient.getBlobClient(file.getBlobUrl());
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            blobClient.download(outputStream);
+            blobClient.downloadStream(outputStream);
             byte[] data = outputStream.toByteArray();
             return new ByteArrayResource(data);
         } catch (Exception e) {
