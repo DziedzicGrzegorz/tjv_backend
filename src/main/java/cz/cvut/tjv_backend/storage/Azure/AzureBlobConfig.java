@@ -1,4 +1,4 @@
-package cz.cvut.tjv_backend.storage.azureBlob;
+package cz.cvut.tjv_backend.storage.Azure;
 
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
