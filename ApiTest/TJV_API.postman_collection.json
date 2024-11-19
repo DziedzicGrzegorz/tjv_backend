@@ -1,0 +1,1210 @@
+{
+	"info": {
+		"_postman_id": "276bf4f5-d379-47f9-847d-51a43491742e",
+		"name": "TJV_API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "33507885"
+	},
+	"item": [
+		{
+			"name": "user",
+			"item": [
+				{
+					"name": "Create a User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User created successfully\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('username', pm.environment.get('username'));",
+									"    pm.expect(jsonData).to.have.property('email', pm.environment.get('userEmail'));",
+									"    pm.expect(jsonData).to.have.property('groupRoles').that.is.an('array');",
+									"    pm.expect(jsonData).to.have.property('sharedFiles').that.is.an('array');",
+									"",
+									"        pm.environment.set('userId', jsonData.id);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.environment.set('userId', pm.variables.replaceIn('{{$guid}}'));",
+									"pm.environment.set('username', pm.variables.replaceIn('{{$randomUserName}}'));",
+									"pm.environment.set('userEmail', pm.variables.replaceIn('{{$randomEmail}}'));",
+									"pm.environment.set('userPassword', pm.variables.replaceIn('{{$randomPassword}}'));",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"{{username}}\",\n  \"email\": \"{{userEmail}}\",\n  \"passwordHash\": \"{{userPassword}}\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/users",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve a User by Email",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/v1/users/{{userId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve a User by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/v1/users/{{userId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User's Username",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var newUsername = pm.environment.get(\"username\") + \"1\"",
+									"pm.environment.set('username', pm.variables.replaceIn(newUsername));"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\":\"{{username}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/users/{{userId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User's Email",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"",
+									"pm.environment.set('userEmail', pm.variables.replaceIn('{{$randomEmail}}'));",
+									"",
+									"",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User retieved successfully\", function () {",
+									"    pm.response.to.have.status(204);",
+									"",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\":\"{{userEmail}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/users/{{userId}}/email",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"{{userId}}",
+								"email"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User's Password",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.environment.set('userPassword', pm.variables.replaceIn('{{$randomPassword}}'))"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User updated successfully\", function () {",
+									"  pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"password\":\"{{userPassword}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/users/{{userId}}/password",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"{{userId}}",
+								"password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete a User by ID",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/v1/users/{{userId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "file",
+			"item": [
+				{
+					"name": "Upload a File",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Pre-request script to generate file data and store in environment variables",
+									"",
+									"// Generate random UUID for fileId",
+									"pm.environment.set('fileId', pm.variables.replaceIn('{{$guid}}'));",
+									"",
+									"// Generate random file details",
+									"var randomFilename = 'test.txt';",
+									"var fileType = 'text/plain';",
+									"var fileSize = 1;",
+									"var fileVersion = 1;",
+									"",
+									"pm.environment.set('filename', randomFilename);",
+									"pm.environment.set('fileType', fileType);",
+									"pm.environment.set('fileSize', fileSize);",
+									"pm.environment.set('fileVersion', fileVersion);",
+									"",
+									"// Postman test script for verifying file details",
+									"pm.test(\"File details are correct\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.nested.property('owner.id', pm.environment.get('userId'));",
+									"    pm.expect(jsonData).to.have.nested.property('owner.username', pm.environment.get('username'));",
+									"    pm.expect(jsonData).to.have.nested.property('owner.email', pm.environment.get('userEmail'));",
+									"    pm.expect(jsonData).to.have.property('filename', pm.environment.get('filename'));",
+									"    pm.expect(jsonData).to.have.property('fileType', pm.environment.get('fileType'));",
+									"    pm.expect(jsonData).to.have.property('size', pm.environment.get('fileSize'));",
+									"    pm.expect(jsonData).to.have.property('version', pm.environment.get('fileVersion'));",
+									"    pm.expect(jsonData).to.have.property('createdAt').that.is.an('string');",
+									"    pm.expect(jsonData).to.have.property('updatedAt').that.is.an('string');",
+									"",
+									"    // Add the generated fileId to an array in environment variables",
+									"var fileIds = pm.environment.get('fileIds') ? JSON.parse(pm.environment.get('fileIds')) : [];",
+									"fileIds.push(jsonData.id);",
+									"pm.environment.set('fileIds', JSON.stringify(fileIds));",
+									"",
+									"    pm.environment.set('fileId', jsonData.id);",
+									"    pm.environment.set('filename', jsonData.filename);",
+									"    pm.environment.set('fileType', jsonData.fileType);",
+									"    pm.environment.set('size', jsonData.size);",
+									"    pm.environment.set('fileVersion', jsonData.version);",
+									"    pm.environment.set('createdAt', jsonData.createdAt);",
+									"    pm.environment.set('updatedAt', jsonData.updatedAt);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "multipart/form-data; boundary=--boundary"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "ownerId",
+									"value": "{{userId}}",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/Users/grzegorzdziedzic/Library/Mobile Documents/com~apple~TextEdit/Documents/test.txt"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/files",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"files"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get File by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Postman test script for verifying file details after retrieval",
+									"pm.test(\"File details are correct after retrieval\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id', pm.environment.get('fileId'));",
+									"    pm.expect(jsonData).to.have.nested.property('owner.id', pm.environment.get('userId'));",
+									"    pm.expect(jsonData).to.have.nested.property('owner.username', pm.environment.get('username'));",
+									"    pm.expect(jsonData).to.have.nested.property('owner.email', pm.environment.get('userEmail'));",
+									"    pm.expect(jsonData).to.have.property('filename', pm.environment.get('filename'));",
+									"    pm.expect(jsonData).to.have.property('fileType', pm.environment.get('fileType'));",
+									"    pm.expect(jsonData).to.have.property('size', pm.environment.get('fileSize'));",
+									"    pm.expect(jsonData).to.have.property('version').to.eql(1);",
+									"    pm.expect(jsonData).to.have.property('createdAt', pm.environment.get('createdAt'));",
+									"    pm.expect(jsonData).to.have.property('updatedAt', pm.environment.get('updatedAt'));",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/v1/files/{{fileId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"files",
+								"{{fileId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update a File",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Postman test script for verifying file details after update",
+									"pm.test(\"File details are correct after update\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    var jsonData = pm.response.json();",
+									"    var currentVersion = parseInt(pm.environment.get('fileVersion'));",
+									"    var expectedVersion = currentVersion + 1;",
+									"    ",
+									"    pm.expect(jsonData).to.have.property('id', pm.environment.get('fileId'));",
+									"    pm.expect(jsonData).to.have.nested.property('owner.id', pm.environment.get('userId'));",
+									"    pm.expect(jsonData).to.have.nested.property('owner.username', pm.environment.get('username'));",
+									"    pm.expect(jsonData).to.have.nested.property('owner.email', pm.environment.get('userEmail'));",
+									"    pm.expect(jsonData).to.have.property('filename', 'test_update.txt');",
+									"    pm.expect(jsonData).to.have.property('fileType', pm.environment.get('fileType'));",
+									"    pm.expect(jsonData).to.have.property('size', pm.environment.get('fileSize'));",
+									"    pm.expect(jsonData).to.have.property('version', expectedVersion);",
+									"    pm.expect(jsonData).to.have.property('createdAt', pm.environment.get('createdAt'));",
+									"    pm.expect(jsonData).to.have.property('updatedAt').that.is.an('string');",
+									"",
+									"    // Store updated file values to global variables",
+									"    pm.environment.set('filename', jsonData.filename);",
+									"    pm.environment.set('fileVersion', jsonData.version); // Update file version in environment",
+									"    pm.environment.set('updatedAt', jsonData.updatedAt);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "multipart/form-data; boundary=--boundary"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "userId",
+									"value": "{{userId}}",
+									"type": "text"
+								},
+								{
+									"key": "updatedFile",
+									"type": "file",
+									"src": "/Users/grzegorzdziedzic/Library/Mobile Documents/com~apple~TextEdit/Documents/test_update.txt"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/files/{{fileId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"files",
+								"{{fileId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Download a File",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"File download response is correct\", function () {",
+									"    // Check response status is 200",
+									"    pm.response.to.have.status(200);",
+									"    ",
+									"    // Verify the content type is 'application/octet-stream'",
+									"    pm.response.to.have.header(\"Content-Type\", \"application/octet-stream\");",
+									"",
+									"    // Check if the 'Content-Disposition' header is present",
+									"    pm.response.to.have.header(\"Content-Disposition\");",
+									"",
+									"    // Extract and verify Content-Disposition header to ensure it contains \"attachment\"",
+									"    var contentDisposition = pm.response.headers.get(\"Content-Disposition\");",
+									"    pm.expect(contentDisposition).to.include(\"attachment\");",
+									"",
+									"    // Optional: You can also log the file content (in binary)",
+									"    console.log(pm.response.text());",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/v1/files/download/{{fileId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"files",
+								"download",
+								"{{fileId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Files by User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Get all files by user - response is valid\", function () {",
+									"    pm.response.to.have.status(200);",
+									"",
+									"    var jsonData = pm.response.json();",
+									"",
+									"    // Check if the response is an array",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"",
+									"    // Iterate through each file object and verify its properties",
+									"    jsonData.forEach(function (file) {",
+									"        // Check if the file object has all necessary properties",
+									"        pm.expect(file).to.have.property('id').that.is.a('string');",
+									"        pm.expect(file).to.have.nested.property('owner.id', pm.environment.get('userId'));",
+									"        pm.expect(file).to.have.nested.property('owner.username', pm.environment.get('username'));",
+									"        pm.expect(file).to.have.nested.property('owner.email', pm.environment.get('userEmail'));",
+									"",
+									"        pm.expect(file).to.have.property('filename').that.is.a('string');",
+									"        pm.expect(file).to.have.property('fileType').that.is.a('string');",
+									"        pm.expect(file).to.have.property('size').that.is.a('number');",
+									"        pm.expect(file).to.have.property('version').that.is.a('number');",
+									"        pm.expect(file).to.have.property('createdAt').that.is.a('string');",
+									"        pm.expect(file).to.have.property('updatedAt').that.is.a('string');",
+									"    });",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/v1/files/user/{{userId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"files",
+								"user",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Files Not Shared by User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Get all files by user - response is valid\", function () {",
+									"    pm.response.to.have.status(200);",
+									"",
+									"    var jsonData = pm.response.json();",
+									"",
+									"    // Check if the response is an array",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"",
+									"    // Iterate through each file object and verify its properties",
+									"    jsonData.forEach(function (file) {",
+									"        // Check if the file object has all necessary properties",
+									"        pm.expect(file).to.have.property('id').that.is.a('string');",
+									"        pm.expect(file).to.have.nested.property('owner.id', pm.environment.get('userId'));",
+									"        pm.expect(file).to.have.nested.property('owner.username', pm.environment.get('username'));",
+									"        pm.expect(file).to.have.nested.property('owner.email', pm.environment.get('userEmail'));",
+									"",
+									"        pm.expect(file).to.have.property('filename').that.is.a('string');",
+									"        pm.expect(file).to.have.property('fileType').that.is.a('string');",
+									"        pm.expect(file).to.have.property('size').that.is.a('number');",
+									"        pm.expect(file).to.have.property('version').that.is.a('number');",
+									"        pm.expect(file).to.have.property('createdAt').that.is.a('string');",
+									"        pm.expect(file).to.have.property('updatedAt').that.is.a('string');",
+									"    });",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/v1/files/user/{{userId}}/not-shared",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"files",
+								"user",
+								"{{userId}}",
+								"not-shared"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Files Owned or Shared with User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Get all files by user - response is valid\", function () {",
+									"    pm.response.to.have.status(200);",
+									"",
+									"    var jsonData = pm.response.json();",
+									"",
+									"    // Check if the response is an array",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"",
+									"    // Iterate through each file object and verify its properties",
+									"    jsonData.forEach(function (file) {",
+									"        // Check if the file object has all necessary properties",
+									"        pm.expect(file).to.have.property('id').that.is.a('string');",
+									"        pm.expect(file).to.have.nested.property('owner.id', pm.environment.get('userId'));",
+									"        pm.expect(file).to.have.nested.property('owner.username', pm.environment.get('username'));",
+									"        pm.expect(file).to.have.nested.property('owner.email', pm.environment.get('userEmail'));",
+									"",
+									"        pm.expect(file).to.have.property('filename').that.is.a('string');",
+									"        pm.expect(file).to.have.property('fileType').that.is.a('string');",
+									"        pm.expect(file).to.have.property('size').that.is.a('number');",
+									"        pm.expect(file).to.have.property('version').that.is.a('number');",
+									"        pm.expect(file).to.have.property('createdAt').that.is.a('string');",
+									"        pm.expect(file).to.have.property('updatedAt').that.is.a('string');",
+									"    });",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/v1/files/all/{{userId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"files",
+								"all",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete a File",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/v1/files/{{fileId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"files",
+								"{{fileId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Multiple Files",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User updated successfully\", function () {",
+									"  pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{{fileIds}}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/files",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"files"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "group",
+			"item": [
+				{
+					"name": "Create a New Group",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Generate group details",
+									"var groupName = 'New TEST' + Math.floor(Math.random() * 1000);",
+									"var groupDescription = 'This is a new group';",
+									"",
+									"// Store generated values in environment variables",
+									"pm.environment.set('groupName', groupName);",
+									"pm.environment.set('groupDescription', groupDescription);",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"    // // Store the group ID and other relevant properties in environment variables",
+									"    // pm.environment.set('groupId', jsonData.id);",
+									"    // pm.environment.set('groupName', jsonData.name);",
+									"    // pm.environment.set('groupDescription', jsonData.description);",
+									"// Test script for verifying group creation response",
+									"pm.test(\"Group created successfully\", function () {",
+									"    pm.response.to.have.status(201); // Expect status code 201 (Created)",
+									"",
+									"    var jsonData = pm.response.json(); // Parse response body as JSON",
+									"",
+									"    // Check if response contains all necessary properties",
+									"    pm.expect(jsonData).to.have.property('id').that.is.a('string');",
+									"    pm.expect(jsonData).to.have.property('name', pm.environment.get('groupName'));",
+									"    pm.expect(jsonData).to.have.property('description', pm.environment.get('groupDescription'));",
+									"    pm.expect(jsonData).to.have.property('userRoles').that.is.an('array');",
+									"    pm.expect(jsonData).to.have.property('sharedFiles').that.is.an('array');",
+									"        pm.environment.set('groupId', jsonData.id);",
+									"    pm.environment.set('groupName', jsonData.name);",
+									"    pm.environment.set('groupDescription', jsonData.description);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"{{groupName}}\",\n  \"description\": \"{{groupDescription}}\",\n  \"ownerId\": \"{{userId}}\"\n}\n"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/groups",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"groups"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve a Group by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Group details are correct after retrieval\", function () {",
+									"    pm.response.to.have.status(200); // Expect status code 200 (OK)",
+									"",
+									"    var jsonData = pm.response.json(); // Parse response body as JSON",
+									"",
+									"    // Verify if the response contains all necessary properties",
+									"    pm.expect(jsonData).to.have.property('id', pm.variables.get('groupId'));",
+									"    pm.expect(jsonData).to.have.property('name', pm.variables.get('groupName'));",
+									"    pm.expect(jsonData).to.have.property('description', pm.variables.get('groupDescription'));",
+									"",
+									"    // Verify 'userRoles' to contain at least one entry with 'FOUNDER' role",
+									"    pm.expect(jsonData).to.have.property('userRoles').that.is.an('array').with.lengthOf.at.least(1);",
+									"    ",
+									"   // Verify 'userRoles' to contain at least one entry with 'FOUNDER' role and correct user ID",
+									"    pm.expect(jsonData).to.have.property('userRoles').that.is.an('array').with.lengthOf.at.least(1);",
+									"    ",
+									"    var foundFounder = jsonData.userRoles.some(function (userRole) {",
+									"        return userRole.role === \"FOUNDER\"",
+									"    });",
+									"    var founderId = jsonData.userRoles.some(function (userRole) {",
+									"        return userRole.id === \"5139b266-b613-4328-aaba-9fd9aca65030\"",
+									"    });",
+									"    pm.expect(founderId).to.be.true;",
+									"    // Expect that we found a userRole with 'FOUNDER' role and matching user ID",
+									"    pm.expect(foundFounder).to.be.true;",
+									"",
+									"    // Verify 'sharedFiles' property exists and is an empty array",
+									"    pm.expect(jsonData).to.have.property('sharedFiles').that.is.an('array').and.is.empty;",
+									"",
+									"    // Store any new values if needed (optional)",
+									"    pm.variables.set('retrievedGroupId', jsonData.id);",
+									"    pm.variables.set('retrievedGroupName', jsonData.name);",
+									"    pm.variables.set('retrievedGroupDescription', jsonData.description);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/v1/groups/{{groupId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"groups",
+								"{{groupId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update a Group",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Generate new details for the group update",
+									"var updatedGroupName = 'Updated TEST' + Math.floor(Math.random() * 1000);",
+									"var updatedGroupDescription = 'This is an updated group description';",
+									"",
+									"// Store updated values in environment variables",
+									"pm.environment.set('updatedGroupName', updatedGroupName);",
+									"pm.environment.set('updatedGroupDescription', updatedGroupDescription);",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test script for verifying group details after update",
+									"pm.test(\"Group details are correct after update\", function () {",
+									"    pm.response.to.have.status(200); // Expect status code 200 (OK)",
+									"",
+									"    var jsonData = pm.response.json(); // Parse response body as JSON",
+									"",
+									"    // Verify if the response contains all necessary properties",
+									"    pm.expect(jsonData).to.have.property('id', pm.environment.get('groupId'));",
+									"    pm.expect(jsonData).to.have.property('name', pm.environment.get('updatedGroupName'));",
+									"    pm.expect(jsonData).to.have.property('description', pm.environment.get('updatedGroupDescription'));",
+									"",
+									"    // Verify 'userRoles' to contain at least one entry",
+									"    pm.expect(jsonData).to.have.property('userRoles').that.is.an('array').with.lengthOf.at.least(1);",
+									"    ",
+									"    // Check that there is a userRole with the role 'FOUNDER'",
+									"    var hasFounderRole = jsonData.userRoles.some(function (userRole) {",
+									"        return userRole.role === \"FOUNDER\";",
+									"    });",
+									"    pm.expect(hasFounderRole).to.be.true;",
+									"",
+									"    // Check that the 'FOUNDER' role is assigned to the correct user ID",
+									"    var hasCorrectFounderUserId = jsonData.userRoles.some(function (userRole) {",
+									"        return userRole.role === \"FOUNDER\" && userRole.id === pm.environment.get('userId');",
+									"    });",
+									"    pm.expect(hasCorrectFounderUserId).to.be.true;",
+									"",
+									"    // Verify 'sharedFiles' property exists and is an empty array (assuming no shared files)",
+									"    pm.expect(jsonData).to.have.property('sharedFiles').that.is.an('array');",
+									"",
+									"    // Store updated group values to environment variables (optional)",
+									"    pm.environment.set('groupId', jsonData.id);",
+									"    pm.environment.set('updatedGroupName', jsonData.name);",
+									"    pm.environment.set('updatedGroupDescription', jsonData.description);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"{{groupId}}\",\n  \"name\": \"{{updatedGroupName}}\",\n  \"description\": \"{{updatedGroupDescription}}\"\n}\n"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/groups/{{groupId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"groups",
+								"{{groupId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete a Group by ID",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/v1/groups/{{groupId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"groups",
+								"{{groupId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Users to Group",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n    \"e99a83d6-f325-4605-93a4-460619bb7aaa\",\n    \"{{userId}}\"\n]\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/groups/{{groupId}}/add-users",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"groups",
+								"{{groupId}}",
+								"add-users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete users from group",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\"{{userId}}\"]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/groups/{{groupId}}/remove-users",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"groups",
+								"{{groupId}}",
+								"remove-users"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
