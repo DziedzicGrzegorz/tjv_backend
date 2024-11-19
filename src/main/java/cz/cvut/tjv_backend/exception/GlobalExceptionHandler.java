@@ -31,7 +31,22 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleUnauthorizedException(Exceptions.UnauthorizedException ex, WebRequest request) {
         return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
     }
-
+    @ExceptionHandler(Exceptions.StorageDeleteException.class)
+    public ResponseEntity<ErrorResponse> handleStorageDeleteException(Exceptions.StorageDeleteException ex, WebRequest request) {
+        return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error deleting file from storage", request);
+    }
+    @ExceptionHandler(Exceptions.StorageUploadException.class)
+    public ResponseEntity<ErrorResponse> handleStorageUploadException(Exceptions.StorageUploadException ex, WebRequest request) {
+        return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error uploading file to storage", request);
+    }
+    @ExceptionHandler(Exceptions.StorageDownloadException.class)
+    public ResponseEntity<ErrorResponse> handleStorageDownloadException(Exceptions.StorageDownloadException ex, WebRequest request) {
+        return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error downloading file from storage", request);
+    }
+    @ExceptionHandler(Exceptions.InternalServerException.class)
+    public ResponseEntity<ErrorResponse> handleInternalServerException(Exceptions.InternalServerException ex, WebRequest request) {
+        return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request);
+    }
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, WebRequest request) {
         return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request);

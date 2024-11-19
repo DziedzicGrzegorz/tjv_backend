@@ -19,5 +19,24 @@ public class Exceptions {
             super(message);
         }
     }
-
+    public static class StorageDeleteException extends RuntimeException {
+        public StorageDeleteException(String message) {
+            super(message);
+        }
+    }
+    public static class StorageUploadException extends RuntimeException {
+        public StorageUploadException(String message) {
+            super(message);
+        }
+    }
+    public static class StorageDownloadException extends RuntimeException {
+        public StorageDownloadException(String message) {
+            super(message);
+        }
+    }
+    public static class InternalServerException extends RuntimeException {
+        public InternalServerException(String message) {
+            super(message);
+        }
+    }
 }
