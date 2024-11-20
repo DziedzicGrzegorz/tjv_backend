@@ -65,7 +65,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleUserAlreadyExistsException(Exceptions.UserAlreadyExistsException ex, WebRequest request) {
         return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
-
+    @ExceptionHandler(Exceptions.SelfFileShareException.class)
+    public ResponseEntity<ErrorResponse> handleSelfFileShareException(Exceptions.SelfFileShareException ex, WebRequest request) {
+        return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
+    }
+    @ExceptionHandler(Exceptions.FileAlreadySharedException.class)
+    public ResponseEntity<ErrorResponse> handleFileAlreadySharedException(Exceptions.FileAlreadySharedException ex, WebRequest request) {
+        return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
+    }
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, WebRequest request) {
         return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request);

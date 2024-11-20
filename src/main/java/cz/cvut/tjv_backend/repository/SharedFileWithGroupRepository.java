@@ -25,5 +25,9 @@ public interface SharedFileWithGroupRepository extends JpaRepository<SharedFileW
     // Find shared file details by file ID and group ID
     @Query("SELECT sfwg FROM SharedFileWithGroup sfwg WHERE sfwg.file.id = :fileId AND sfwg.group.id = :groupId")
     Optional<SharedFileWithGroup> findSharedFileDetails(@Param("fileId") UUID fileId, @Param("groupId") UUID groupId);
+
+    Optional<SharedFileWithGroup> findByFileIdAndGroupId(UUID fileId, UUID groupId);
+
+    boolean existsByFileIdAndGroupId(UUID fileId, UUID groupId);
 }
 

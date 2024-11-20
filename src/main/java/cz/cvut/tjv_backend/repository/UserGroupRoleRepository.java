@@ -23,6 +23,7 @@ public interface UserGroupRoleRepository extends JpaRepository<UserGroupRole, UU
     boolean existsByUserAndGroup(User user, Group group);
 
     boolean existsByUserAndGroupAndRole(User user, Group group, Role role);
+    boolean existsByUserIdAndGroupId(UUID userId, UUID groupId);
 
     List<UserGroupRole> findByUserId(UUID userId);
 

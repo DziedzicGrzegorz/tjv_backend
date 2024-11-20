@@ -61,8 +61,21 @@ public class Exceptions {
             super(message);
         }
     }
+
     public static class UserAlreadyExistsException extends RuntimeException {
         public UserAlreadyExistsException(String message) {
+            super(message);
+        }
+    }
+
+    public static class SelfFileShareException extends RuntimeException {
+        public SelfFileShareException(String message) {
+            super(message);
+        }
+    }
+
+    public static class FileAlreadySharedException extends RuntimeException {
+        public FileAlreadySharedException(String message) {
             super(message);
         }
     }

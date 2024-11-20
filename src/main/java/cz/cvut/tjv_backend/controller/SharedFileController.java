@@ -39,18 +39,14 @@ public class SharedFileController {
     // Retrieve shared file with user by ID
     @GetMapping("/user/{id}")
     public ResponseEntity<SharedFileWithUserDto> getSharedFileWithUserById(@PathVariable UUID id) {
-        Optional<SharedFileWithUserDto> sharedFileWithUser = sharedFileService.getSharedFileWithUserById(id);
-        return sharedFileWithUser.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+        SharedFileWithUserDto sharedFileWithUser = sharedFileService.getSharedFileWithUserById(id);
+        return ResponseEntity.ok(sharedFileWithUser);
     }
 
     // Retrieve shared file with group by ID
     @GetMapping("/group/{id}")
     public ResponseEntity<List<SharedFileWithGroupDto>> getSharedFileWithGroupById(@PathVariable UUID id) {
         List<SharedFileWithGroupDto> sharedFileWithGroup = sharedFileService.getSharedFileWithGroupById(id);
-        if (sharedFileWithGroup.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared file not found");
-        }
         return ResponseEntity.ok(sharedFileWithGroup);
     }
 

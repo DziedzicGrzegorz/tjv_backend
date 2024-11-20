@@ -30,5 +30,8 @@ public interface SharedFileWithUserRepository extends JpaRepository<SharedFileWi
     // Find all files shared by a specific user with information about who it was shared with
     @Query("SELECT sfwg FROM SharedFileWithGroup sfwg")
     List<SharedFileWithGroup> findAllFilesSharedWithGroupsWithDetails();
+
+
+    Optional<SharedFileWithUser> findByFileIdAndSharedWithId(UUID fileId, UUID user);
 }
 

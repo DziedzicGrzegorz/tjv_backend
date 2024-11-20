@@ -3,7 +3,9 @@ package cz.cvut.tjv_backend.service;
 import cz.cvut.tjv_backend.dto.SharedFileWithGroupDto;
 import cz.cvut.tjv_backend.dto.SharedFileWithUserDto;
 import cz.cvut.tjv_backend.entity.*;
+import cz.cvut.tjv_backend.exception.Exceptions.FileAlreadySharedException;
 import cz.cvut.tjv_backend.exception.Exceptions.NotFoundException;
+import cz.cvut.tjv_backend.exception.Exceptions.SelfFileShareException;
 import cz.cvut.tjv_backend.mapper.SharedFileWithGroupMapper;
 import cz.cvut.tjv_backend.mapper.SharedFileWithUserMapper;
 import cz.cvut.tjv_backend.repository.*;
@@ -11,9 +13,7 @@ import cz.cvut.tjv_backend.request.FileSharingWithGroupRequest;
 import cz.cvut.tjv_backend.request.FileSharingWithUserRequest;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,6 +29,7 @@ public class SharedFileService {
     private final SharedFileWithGroupRepository sharedFileWithGroupRepository;
     private final SharedFileWithGroupMapper sharedFileWithGroupMapper;
     private final SharedFileWithUserMapper sharedFileWithUserMapper;
+    private final UserGroupRoleRepository userGroupRoleRepository;
     private final FileRepository fileRepository;
     private final UserRepository userRepository;
     private final GroupRepository groupRepository;
@@ -41,7 +42,18 @@ public class SharedFileService {
 
         // Retrieve the user using the provided user ID
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        //check if the user won't to share with yourself
+        if (file.getOwner().getId().equals(user.getId())) {
+            throw new SelfFileShareException("You can't share file with yourself");
+        }
+        //check if the file is already shared with the user
+        Optional<SharedFileWithUser> sharedFileWithUserOptional = sharedFileWithUserRepository.findByFileIdAndSharedWithId(file.getId(), user.getId());
+
+        if (sharedFileWithUserOptional.isPresent()) {
+            throw new FileAlreadySharedException("File is already shared with this user");
+        }
 
         // Create and save the shared file entity
         SharedFileWithUser sharedFileWithUser = SharedFileWithUser.builder()
@@ -59,26 +71,60 @@ public class SharedFileService {
 
     // Share a file with a group
     public SharedFileWithGroupDto shareFileWithGroup(FileSharingWithGroupRequest request) {
-        // Implement logic to get File and Group entities by IDs from the request
-        File file = fileRepository.findById(request.getFileId()).orElseThrow(() -> new EntityNotFoundException("File not found"));
-        Group group = groupRepository.findById(request.getGroupId()).orElseThrow(() -> new EntityNotFoundException("Group not found"));
+        File file = getFileById(request.getFileId());
+        Group group = getGroupById(request.getGroupId());
+        User owner = file.getOwner();
 
-        SharedFileWithGroup sharedFileWithGroup = SharedFileWithGroup.builder()
-                .file(file)
-                .group(group)
-                .permission(request.getPermission())
-                .sharedAt(LocalDateTime.now())
-                .build();
+        validateUserMembershipInGroup(owner.getId(), group.getId());
+        ensureFileNotAlreadyShared(file.getId(), group.getId());
 
+        SharedFileWithGroup sharedFileWithGroup = createSharedFileWithGroup(file, group, request.getPermission());
         SharedFileWithGroup savedSharedFile = sharedFileWithGroupRepository.save(sharedFileWithGroup);
+
         return sharedFileWithGroupMapper.toDto(savedSharedFile);
     }
 
+    private File getFileById(UUID fileId) {
+        return fileRepository.findById(fileId)
+                .orElseThrow(() -> new EntityNotFoundException("File not found with ID: " + fileId));
+    }
+
+    private Group getGroupById(UUID groupId) {
+        return groupRepository.findById(groupId)
+                .orElseThrow(() -> new EntityNotFoundException("Group not found with ID: " + groupId));
+    }
+
+    private void validateUserMembershipInGroup(UUID userId, UUID groupId) {
+        boolean isMember = userGroupRoleRepository.existsByUserIdAndGroupId(userId, groupId);
+        if (!isMember) {
+            throw new EntityNotFoundException("User with ID " + userId + " is not a member of group with ID " + groupId);
+        }
+    }
+
+    private void ensureFileNotAlreadyShared(UUID fileId, UUID groupId) {
+        boolean isAlreadyShared = sharedFileWithGroupRepository.existsByFileIdAndGroupId(fileId, groupId);
+        if (isAlreadyShared) {
+            throw new FileAlreadySharedException("File with ID " + fileId + " is already shared with group ID " + groupId);
+        }
+    }
+
+    private SharedFileWithGroup createSharedFileWithGroup(File file, Group group, String permission) {
+        return SharedFileWithGroup.builder()
+                .file(file)
+                .group(group)
+                .permission(permission)
+                .sharedAt(LocalDateTime.now())
+                .build();
+    }
+
+
 
     // Retrieve shared file with user by ID
-    public Optional<SharedFileWithUserDto> getSharedFileWithUserById(UUID id) {
-        Optional<SharedFileWithUser> sharedFileWithUser = sharedFileWithUserRepository.findById(id);
-        return sharedFileWithUser.map(sharedFileWithUserMapper::toDto);
+    public SharedFileWithUserDto getSharedFileWithUserById(UUID id) {
+        SharedFileWithUser sharedFileWithUser = sharedFileWithUserRepository.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("SharedFileWithUser not found")
+        );
+        return sharedFileWithUserMapper.toDto(sharedFileWithUser);
     }
 
     // Updated service method in SharedFileService
