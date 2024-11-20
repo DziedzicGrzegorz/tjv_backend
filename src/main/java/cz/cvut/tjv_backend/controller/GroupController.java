@@ -50,16 +50,16 @@ public class GroupController {
     }
 
     // Add Users to Group
-    @PutMapping("/{groupId}/add-users")
+    @PostMapping("/{groupId}/add-users")
     public ResponseEntity<GroupDto> addUsersToGroup(@PathVariable UUID groupId, @RequestBody List<UUID> userIds) {
         GroupDto group = groupService.addUsersToGroup(groupId, userIds);
         return ResponseEntity.ok(group);
     }
 
     // Remove Users from Group
-    @PutMapping("/{groupId}/remove-users")
-    public ResponseEntity<GroupDto> removeUsersFromGroup(@PathVariable UUID groupId, @RequestBody Set<UUID> userIds, @RequestParam UUID ownerId) {
-        GroupDto group = groupService.removeUsersFromGroup(groupId, ownerId, userIds);
+    @DeleteMapping("/{groupId}/remove-users")
+    public ResponseEntity<GroupDto> removeUsersFromGroup(@PathVariable UUID groupId, @RequestBody Set<UUID> userIds) {
+        GroupDto group = groupService.removeUsersFromGroup(groupId, userIds);
         return ResponseEntity.ok(group);
     }
 

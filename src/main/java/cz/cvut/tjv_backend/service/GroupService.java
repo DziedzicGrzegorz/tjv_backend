@@ -7,15 +7,19 @@ import cz.cvut.tjv_backend.entity.Group;
 import cz.cvut.tjv_backend.entity.User;
 import cz.cvut.tjv_backend.entity.UserGroupRole;
 import cz.cvut.tjv_backend.entity.utils.Role;
+import cz.cvut.tjv_backend.exception.Exceptions.ForbiddenOperationException;
+import cz.cvut.tjv_backend.exception.Exceptions.GroupOwnerCannotBeMemberException;
+import cz.cvut.tjv_backend.exception.Exceptions.NotFoundException;
+import cz.cvut.tjv_backend.exception.Exceptions.UserAlreadyMemberException;
 import cz.cvut.tjv_backend.mapper.GroupMapper;
 import cz.cvut.tjv_backend.repository.GroupRepository;
 import cz.cvut.tjv_backend.repository.UserGroupRoleRepository;
 import cz.cvut.tjv_backend.repository.UserRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,19 +35,21 @@ public class GroupService {
     private final UserRepository userRepository;
     private final UserGroupRoleRepository userGroupRoleRepository;
     private final GroupMapper groupMapper;
+    @PersistenceContext
+    private EntityManager entityManager;
 
     // Create a new Group
     @Transactional
     public GroupDto createGroup(CreateGroupDto createGroup) {
         groupRepository.findByName(createGroup.getName())
                 .ifPresent(group -> {
-                    throw new ResponseStatusException(HttpStatus.CONFLICT, "Group with this name already exists");
+                    throw new NotFoundException("Group with this name already exists");
                 });
 
         Group group = groupMapper.toEntityFromCreateGroupDto(createGroup);
 
         User founder = userRepository.findById(createGroup.getOwnerId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Founder not found"));
+                .orElseThrow(() -> new NotFoundException("Founder not found"));
 
         UserGroupRole founderRole = UserGroupRole.builder()
                 .user(founder)
@@ -57,7 +63,7 @@ public class GroupService {
 
         Set<User> users = createGroup.getUserRoles().stream()
                 .map(userRoleDto -> userRepository.findById(userRoleDto.getId())
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found for ID: " + userRoleDto.getId())))
+                        .orElseThrow(() -> new NotFoundException("User not found for ID: " + userRoleDto.getId())))
                 .collect(Collectors.toSet());
 
         for (User user : users) {
@@ -69,15 +75,19 @@ public class GroupService {
                     .build();
             userGroupRoleRepository.save(userRole);
         }
+        this.entityManager.flush();
+        this.entityManager.clear();
+        Group newGroup = groupRepository.findById(group.getId())
+                .orElseThrow(() -> new NotFoundException("Group not found"));
 
-        return groupMapper.toDto(group);
+        return groupMapper.toDto(newGroup);
     }
 
 
     // Update a Group
     public GroupDto updateGroup(GroupUpdateDto updatedGroup) {
         Group existingGroup = groupRepository.findById(updatedGroup.getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Group not found"));
+                .orElseThrow(() -> new NotFoundException("Group not found"));
 
         Group updatedEntity = Group.builder()
                 .id(existingGroup.getId())
@@ -97,52 +107,72 @@ public class GroupService {
     }
 
     // Add Users to Group with specific role
+    @Transactional
     public GroupDto addUsersToGroup(UUID groupId, List<UUID> userIds) {
-        Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Group not found"));
-        List<User> users = userRepository.findAllById(userIds);
+        Group group = this.groupRepository.findById(groupId).orElseThrow(() -> new NotFoundException("Group not found"));
+        List<User> users = this.userRepository.findAllById(userIds);
+        if (users.size() != userIds.size()) {
+            for (UUID userId : userIds) {
+                if (users.stream().noneMatch((userx) -> userx.getId().equals(userId))) {
+                    throw new NotFoundException("User with ID " + userId + " not found");
+                }
+            }
+        }
+
+        User owner = group.getUserRoles().stream().filter((userRolex) -> userRolex.getRole() == Role.FOUNDER).findFirst().map(UserGroupRole::getUser).orElseThrow(() -> new NotFoundException("Group owner not found"));
 
         for (User user : users) {
-            if (userGroupRoleRepository.existsByUserAndGroup(user, group)) {
-                continue;
+            if (this.userGroupRoleRepository.existsByUserAndGroup(user, group)) {
+                throw new UserAlreadyMemberException("User " + user.getUsername() + " is already a member of the group");
             }
-            UserGroupRole userRole = UserGroupRole.builder()
-                    .user(user)
-                    .group(group)
-                    .role(Role.MEMBER)
-                    .joinedAt(LocalDateTime.now())
-                    .build();
-            userGroupRoleRepository.save(userRole);
-        }
 
-        return groupMapper.toDto(group);
+            if (user.getId().equals(owner.getId())) {
+                throw new GroupOwnerCannotBeMemberException("Group owner cannot add themselves as a member");
+            }
+
+            UserGroupRole userRole = UserGroupRole.builder().user(user).group(group).role(Role.MEMBER).joinedAt(LocalDateTime.now()).build();
+            this.userGroupRoleRepository.save(userRole);
+        }
+        this.entityManager.flush();
+        this.entityManager.clear();
+              Group NewGroup = groupRepository.findById(groupId)
+                .orElseThrow(() -> new NotFoundException("Group not found"));
+        return groupMapper.toDto(NewGroup);
     }
 
-    // Remove Users from Group
     @Transactional
-    public GroupDto removeUsersFromGroup(UUID groupId, UUID ownerId, Set<UUID> userIds) {
+    public GroupDto removeUsersFromGroup(UUID groupId, Set<UUID> userIds) {
         Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Group not found"));
-        User owner = userRepository.findById(ownerId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Owner not found"));
+                .orElseThrow(() -> new NotFoundException("Group not found"));
 
-        if (!userGroupRoleRepository.existsByUserAndGroupAndRole(owner, group, Role.ADMIN) &&
-                !userGroupRoleRepository.existsByUserAndGroupAndRole(owner, group, Role.FOUNDER)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only group admins or founders can remove users from the group");
+        boolean isAdminOrFounder = group.getUserRoles().stream()
+                .anyMatch(userRole -> userRole.getRole() == Role.FOUNDER || userRole.getRole() == Role.ADMIN);
+
+        if (!isAdminOrFounder) {
+            throw new ForbiddenOperationException("Only group admins or founders can remove users from the group");
         }
 
-        for (UUID userId : userIds) {
-            removeUserFromGroup(userId, groupId);
-        }
-        //get updated grouyp
-        group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Group not found"));
-        return groupMapper.toDto(group);
+        userIds.forEach(userId -> {
+            UserGroupRole userRole = userGroupRoleRepository.findByUserIdAndGroupId(userId, group.getId())
+                    .orElseThrow(() -> new NotFoundException("User with ID " + userId + " not found in group"));
+            if (userRole.getRole() == Role.FOUNDER) {
+                throw new ForbiddenOperationException("Cannot remove the founder from the group");
+            }
+            userGroupRoleRepository.deleteByUserIdAndGroupId(userId, groupId);
+        });
+
+        entityManager.flush();
+        entityManager.clear();
+
+        Group NewGroup = groupRepository.findById(groupId)
+                .orElseThrow(() -> new NotFoundException("Group not found"));
+        return groupMapper.toDto(NewGroup);
     }
+
 
     // Get a Group by ID
     public GroupDto getGroupById(UUID groupId) {
-        Group group = groupRepository.findById(groupId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Group not found"));
+        Group group = groupRepository.findById(groupId).orElseThrow(() -> new NotFoundException("Group not found"));
         return groupMapper.toDto(group);
 
     }

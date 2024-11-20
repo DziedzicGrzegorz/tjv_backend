@@ -3,6 +3,7 @@ package cz.cvut.tjv_backend.service;
 import cz.cvut.tjv_backend.dto.SharedFileWithGroupDto;
 import cz.cvut.tjv_backend.dto.SharedFileWithUserDto;
 import cz.cvut.tjv_backend.entity.*;
+import cz.cvut.tjv_backend.exception.Exceptions.NotFoundException;
 import cz.cvut.tjv_backend.mapper.SharedFileWithGroupMapper;
 import cz.cvut.tjv_backend.mapper.SharedFileWithUserMapper;
 import cz.cvut.tjv_backend.repository.*;
@@ -36,7 +37,7 @@ public class SharedFileService {
     public SharedFileWithUserDto shareFileWithUser(FileSharingWithUserRequest request) {
         // Retrieve the file using the provided file ID
         File file = fileRepository.findById(request.getFileId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found"));
+                .orElseThrow(() -> new NotFoundException("File not found"));
 
         // Retrieve the user using the provided user ID
         User user = userRepository.findById(request.getUserId())
@@ -84,7 +85,7 @@ public class SharedFileService {
     public List<SharedFileWithGroupDto> getSharedFileWithGroupById(UUID id) {
         List<SharedFileWithGroup> sharedFileWithGroup = sharedFileWithGroupRepository.findFilesSharedWithGroup(id);
         if (sharedFileWithGroup.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Shared file not found");
+            throw new EntityNotFoundException("Shared file not found");
         }
         return sharedFileWithGroup.stream()
                 .map(sharedFileWithGroupMapper::toDto)
@@ -94,14 +95,14 @@ public class SharedFileService {
     // Delete shared file with a user
     public void deleteSharedFileWithUser(UUID id) {
         SharedFileWithUser sharedFileWithUser = sharedFileWithUserRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "SharedFileWithUser not found"));
+                .orElseThrow(() -> new EntityNotFoundException("SharedFileWithUser not found"));
         sharedFileWithUserRepository.delete(sharedFileWithUser);
     }
 
     // Delete shared file with a group
     public void deleteSharedFileWithGroup(UUID id) {
         SharedFileWithGroup sharedFileWithGroup = sharedFileWithGroupRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "SharedFileWithGroup not found"));
+                .orElseThrow(() -> new EntityNotFoundException("SharedFileWithGroup not found"));
         sharedFileWithGroupRepository.delete(sharedFileWithGroup);
     }
 

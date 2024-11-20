@@ -3,12 +3,14 @@ package cz.cvut.tjv_backend.service;
 import cz.cvut.tjv_backend.dto.user.UserCreateDto;
 import cz.cvut.tjv_backend.dto.user.UserDto;
 import cz.cvut.tjv_backend.entity.User;
+import cz.cvut.tjv_backend.exception.Exceptions;
 import cz.cvut.tjv_backend.mapper.UserMapper;
 import cz.cvut.tjv_backend.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import cz.cvut.tjv_backend.exception.Exceptions.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,7 +27,7 @@ public class UserService {
     // Create a new User
     public UserDto createUser(UserCreateDto user) {
         if (userRepository.existsByEmail(user.getEmail())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "User with this email already exists");
+            throw new Exceptions.NotFoundException("User with this email already exists");
         }
         User newUser = userMapper.toEntity(user);
         User saveduser = userRepository.save(newUser);
@@ -48,7 +50,7 @@ public class UserService {
     // Update a User's username
     public void updateUsername(UUID id, String username) {
         if (!userRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+            throw new NotFoundException("User not found");
         }
         userRepository.updateUsernameById(id, username);
     }
@@ -56,10 +58,10 @@ public class UserService {
     // Update a User's email
     public void updateEmail(UUID id, String email) {
         if (!userRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+            throw new NotFoundException("User not found");
         }
         if (userRepository.existsByEmail(email)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "User with this email already exists");
+            throw new UserAlreadyExistsException("User with this email already exists");
         }
         userRepository.updateEmailById(id, email);
     }
@@ -67,7 +69,7 @@ public class UserService {
     // Update a User's password
     public void updatePassword(UUID id, String passwordHash) {
         if (!userRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+            throw new NotFoundException("User not found");
         }
         userRepository.updatePasswordById(id, passwordHash);
     }
@@ -75,7 +77,7 @@ public class UserService {
     // Delete a User by ID
     public void deleteUserById(UUID id) {
         if (!userRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+            throw new NotFoundException("User not found");
         }
         userRepository.deleteById(id);
     }
@@ -83,7 +85,7 @@ public class UserService {
     // Delete a User by email
     public void deleteUserByEmail(String email) {
         if (!userRepository.existsByEmail(email)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+            throw new NotFoundException("User not found");
         }
         userRepository.deleteByEmail(email);
     }

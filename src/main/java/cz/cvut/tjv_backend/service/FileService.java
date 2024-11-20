@@ -3,6 +3,7 @@ package cz.cvut.tjv_backend.service;
 import cz.cvut.tjv_backend.dto.file.FileDto;
 import cz.cvut.tjv_backend.entity.File;
 import cz.cvut.tjv_backend.entity.User;
+import cz.cvut.tjv_backend.exception.Exceptions.*;
 import cz.cvut.tjv_backend.mapper.FileMapper;
 import cz.cvut.tjv_backend.repository.FileRepository;
 import cz.cvut.tjv_backend.repository.UserRepository;
@@ -12,7 +13,6 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import cz.cvut.tjv_backend.exception.Exceptions.*;
 
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
@@ -78,7 +78,7 @@ public class FileService {
             throw new UnauthorizedException("User does not have permission to modify this file");
         }
 
-        String blobPath = userId + "/" + updatedFile.getOriginalFilename();
+        String blobPath = userId + "/" + fileId;
         try {
             storageService.uploadFile(blobPath, updatedFile);
         } catch (StorageUploadException e) {

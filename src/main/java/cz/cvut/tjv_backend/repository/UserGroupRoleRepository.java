@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -29,4 +30,8 @@ public interface UserGroupRoleRepository extends JpaRepository<UserGroupRole, UU
     @Transactional
     @Query("DELETE FROM UserGroupRole ugr WHERE ugr.user.id = :userId AND ugr.group.id = :groupId")
     void deleteByUserIdAndGroupId(@Param("userId") UUID userId, @Param("groupId") UUID groupId);
+
+    Optional<UserGroupRole> findByUserIdAndGroupId(UUID userId, UUID group);
+
+
 }
