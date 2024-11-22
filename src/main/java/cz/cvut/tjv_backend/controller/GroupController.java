@@ -36,7 +36,7 @@ public class GroupController {
 
 
     // Update a Group
-    @PutMapping("/{groupId}")
+    @PutMapping("/")
     public ResponseEntity<GroupDto> updateGroup(@RequestBody GroupUpdateDto updatedGroup) {
         GroupDto group = groupService.updateGroup(updatedGroup);
         return ResponseEntity.ok(group);

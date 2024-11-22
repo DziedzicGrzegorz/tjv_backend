@@ -135,7 +135,7 @@ public class GroupService {
         }
         this.entityManager.flush();
         this.entityManager.clear();
-              Group NewGroup = groupRepository.findById(groupId)
+        Group NewGroup = groupRepository.findById(groupId)
                 .orElseThrow(() -> new NotFoundException("Group not found"));
         return groupMapper.toDto(NewGroup);
     }
@@ -188,19 +188,5 @@ public class GroupService {
     public List<GroupDto> getAllGroups() {
         List<Group> group = groupRepository.findAll();
         return group.stream().map(groupMapper::toDto).collect(Collectors.toList());
-    }
-
-    @Transactional
-    protected void removeUserFromGroup(UUID userId, UUID groupId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new IllegalArgumentException("Group not found"));
-
-        if (userGroupRoleRepository.existsByUserAndGroup(user, group)) {
-            userGroupRoleRepository.deleteByUserIdAndGroupId(user.getId(), group.getId());
-        } else {
-            throw new IllegalArgumentException("User is not part of this group");
-        }
     }
 }

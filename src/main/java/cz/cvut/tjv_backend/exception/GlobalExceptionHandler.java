@@ -34,17 +34,17 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exceptions.StorageDeleteException.class)
     public ResponseEntity<ErrorResponse> handleStorageDeleteException(Exceptions.StorageDeleteException ex, WebRequest request) {
-        return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error deleting file from storage", request);
+        return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request);
     }
 
     @ExceptionHandler(Exceptions.StorageUploadException.class)
     public ResponseEntity<ErrorResponse> handleStorageUploadException(Exceptions.StorageUploadException ex, WebRequest request) {
-        return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error uploading file to storage", request);
+        return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request);
     }
 
     @ExceptionHandler(Exceptions.StorageDownloadException.class)
     public ResponseEntity<ErrorResponse> handleStorageDownloadException(Exceptions.StorageDownloadException ex, WebRequest request) {
-        return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error downloading file from storage", request);
+        return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request);
     }
 
     @ExceptionHandler(Exceptions.InternalServerException.class)
@@ -61,18 +61,22 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleGroupOwnerCannotBeMemberException(Exceptions.GroupOwnerCannotBeMemberException ex, WebRequest request) {
         return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
     }
+
     @ExceptionHandler(Exceptions.UserAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleUserAlreadyExistsException(Exceptions.UserAlreadyExistsException ex, WebRequest request) {
         return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
+
     @ExceptionHandler(Exceptions.SelfFileShareException.class)
     public ResponseEntity<ErrorResponse> handleSelfFileShareException(Exceptions.SelfFileShareException ex, WebRequest request) {
         return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
+
     @ExceptionHandler(Exceptions.FileAlreadySharedException.class)
     public ResponseEntity<ErrorResponse> handleFileAlreadySharedException(Exceptions.FileAlreadySharedException ex, WebRequest request) {
         return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, WebRequest request) {
         return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request);

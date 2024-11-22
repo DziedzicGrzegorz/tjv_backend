@@ -4,13 +4,12 @@ import cz.cvut.tjv_backend.dto.user.UserCreateDto;
 import cz.cvut.tjv_backend.dto.user.UserDto;
 import cz.cvut.tjv_backend.entity.User;
 import cz.cvut.tjv_backend.exception.Exceptions;
+import cz.cvut.tjv_backend.exception.Exceptions.NotFoundException;
+import cz.cvut.tjv_backend.exception.Exceptions.UserAlreadyExistsException;
 import cz.cvut.tjv_backend.mapper.UserMapper;
 import cz.cvut.tjv_backend.repository.UserRepository;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-import cz.cvut.tjv_backend.exception.Exceptions.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -90,12 +89,4 @@ public class UserService {
         userRepository.deleteByEmail(email);
     }
 
-    // Retrieve all Users
-    public List<UserDto> getAllUsers() {
-        List<User> users = userRepository.findAll();
-        //manually map
-        return users.stream()
-                .map(userMapper::toDto)
-                .collect(Collectors.toList());
-    }
 }

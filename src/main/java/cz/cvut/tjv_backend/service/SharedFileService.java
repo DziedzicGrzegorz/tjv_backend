@@ -3,7 +3,6 @@ package cz.cvut.tjv_backend.service;
 import cz.cvut.tjv_backend.dto.SharedFileWithGroupDto;
 import cz.cvut.tjv_backend.dto.SharedFileWithUserDto;
 import cz.cvut.tjv_backend.entity.*;
-import cz.cvut.tjv_backend.entity.utils.Role;
 import cz.cvut.tjv_backend.exception.Exceptions.FileAlreadySharedException;
 import cz.cvut.tjv_backend.exception.Exceptions.NotFoundException;
 import cz.cvut.tjv_backend.exception.Exceptions.SelfFileShareException;
@@ -15,7 +14,6 @@ import cz.cvut.tjv_backend.request.FileSharingWithUserRequest;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import cz.cvut.tjv_backend.exception.Exceptions.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -46,7 +44,7 @@ public class SharedFileService {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
-        //check if the user won't to share with yourself
+        //check if the user wants to share with yourself
         if (file.getOwner().getId().equals(user.getId())) {
             throw new SelfFileShareException("You can't share file with yourself");
         }
@@ -161,13 +159,5 @@ public class SharedFileService {
                         "Shared file not found for fileId: " + fileId + " and groupId: " + groupId));
 
         sharedFileWithGroupRepository.delete(sharedFile);
-    }
-
-    // Find all files shared with a specific group
-    public List<SharedFileWithGroupDto> getFilesSharedWithGroup(UUID groupId) {
-        List<SharedFileWithGroup> sharedFileWithGroups = sharedFileWithGroupRepository.findFilesSharedWithGroup(groupId);
-        return sharedFileWithGroups.stream()
-                .map(sharedFileWithGroupMapper::toDto)
-                .collect(Collectors.toList());
     }
 }
