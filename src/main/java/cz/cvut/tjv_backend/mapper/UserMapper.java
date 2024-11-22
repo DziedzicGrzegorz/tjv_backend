@@ -10,16 +10,6 @@ import org.mapstruct.*;
 public interface UserMapper {
     User toEntity(UserDto userDto);
 
-//    @AfterMapping
-//    default void linkGroupRoles(@MappingTarget User user) {
-//        user.getGroupRoles().forEach(groupRole -> groupRole.setUser(user));
-//    }
-//
-//    @AfterMapping
-//    default void linkSharedFiles(@MappingTarget User user) {
-//        user.getSharedFiles().forEach(sharedFile -> sharedFile.setSharedWith(user));
-//    }
-
     UserDto toDto(User user);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

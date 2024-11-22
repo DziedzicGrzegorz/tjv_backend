@@ -1,4 +1,4 @@
-package cz.cvut.tjv_backend.storage.Azure;
+package cz.cvut.tjv_backend.storage.azure;
 
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
@@ -24,23 +24,17 @@ public class AzureBlobConfig {
     @Bean
     public BlobServiceClient clobServiceClient() {
 
-        BlobServiceClient blobServiceClient =
-                new BlobServiceClientBuilder()
-                        .connectionString(connectionString)
-                        .buildClient();
-
-        return blobServiceClient;
+        return new BlobServiceClientBuilder()
+                .connectionString(connectionString)
+                .buildClient();
 
     }
 
     @Bean
     public BlobContainerClient blobContainerClient() {
 
-        BlobContainerClient blobContainerClient =
-                clobServiceClient()
-                        .getBlobContainerClient(containerName);
-
-        return blobContainerClient;
+        return clobServiceClient()
+                .getBlobContainerClient(containerName);
     }
 
     @Bean

@@ -6,33 +6,17 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 @Repository
 public interface FileRepository extends JpaRepository<File, UUID> {
 
-    //    findAll bu return dto
+    // findAll by return dto
     // Find files by owner ID
     @Query("SELECT f FROM File f WHERE f.owner.id = :ownerId")
     List<File> findFilesByOwnerId(@Param("ownerId") UUID ownerId);
 
-    // Find all files by file type
-    @Query("SELECT f FROM File f WHERE f.fileType = :fileType")
-    List<File> findFilesByFileType(@Param("fileType") String fileType);
-
-    // Find all files created after a specific date
-    @Query("SELECT f FROM File f WHERE f.createdAt > :createdAt")
-    List<File> findFilesCreatedAfter(@Param("createdAt") LocalDateTime createdAt);
-
-    // Find all files updated after a specific date
-    @Query("SELECT f FROM File f WHERE f.updatedAt > :updatedAt")
-    List<File> findFilesUpdatedAfter(@Param("updatedAt") LocalDateTime updatedAt);
-
-    // Find all files by filename (case insensitive)
-    @Query("SELECT f FROM File f WHERE LOWER(f.filename) LIKE LOWER(CONCAT('%', :filename, '%'))")
-    List<File> findFilesByFilenameContaining(@Param("filename") String filename);
 
     // Find all files that are not shared with any users or groups
     @Query("SELECT f FROM File f WHERE f.id NOT IN (SELECT sfwu.file.id FROM SharedFileWithUser sfwu) AND f.id NOT IN (SELECT sfwg.file.id FROM SharedFileWithGroup sfwg) AND f.owner.id = :ownerId")

@@ -3,97 +3,89 @@ package cz.cvut.tjv_backend.service;
 import cz.cvut.tjv_backend.dto.user.UserCreateDto;
 import cz.cvut.tjv_backend.dto.user.UserDto;
 import cz.cvut.tjv_backend.entity.User;
+import cz.cvut.tjv_backend.exception.Exceptions.NotFoundException;
+import cz.cvut.tjv_backend.exception.Exceptions.UserAlreadyExistsException;
 import cz.cvut.tjv_backend.mapper.UserMapper;
 import cz.cvut.tjv_backend.repository.UserRepository;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-@AllArgsConstructor
 @Service
+@AllArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
 
-    // Create a new User
-    public UserDto createUser(UserCreateDto user) {
-        if (userRepository.existsByEmail(user.getEmail())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "User with this email already exists");
-        }
-        User newUser = userMapper.toEntity(user);
-        User saveduser = userRepository.save(newUser);
-        return userMapper.toDto(saveduser);
-
+    public UserDto createUser(UserCreateDto userCreateDto) {
+        validateEmailUniqueness(userCreateDto.getEmail());
+        User user = userMapper.toEntity(userCreateDto);
+        User savedUser = userRepository.save(user);
+        return userMapper.toDto(savedUser);
     }
 
-    // Retrieve a User by ID
-    public Optional<UserDto> getUserById(UUID id) {
-        Optional<User> user = userRepository.findById(id);
-        return user.map(userMapper::toDto);
+    public UserDto getUserById(UUID userId) {
+        User user = findUserById(userId);
+        return userMapper.toDto(user);
     }
 
-    // Retrieve a User by email
-    public Optional<UserDto> getUserByEmail(String email) {
-        Optional<User> user = userRepository.findByEmail(email);
-        return user.map(userMapper::toDto);
+    public UserDto getUserByEmail(String email) {
+        User user = findUserByEmail(email);
+        return userMapper.toDto(user);
     }
 
-    // Update a User's username
-    public void updateUsername(UUID id, String username) {
-        if (!userRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
-        }
-        userRepository.updateUsernameById(id, username);
+    public void updateUsername(UUID userId, String username) {
+        ensureUserExists(userId);
+        userRepository.updateUsernameById(userId, username);
     }
 
-    // Update a User's email
-    public void updateEmail(UUID id, String email) {
-        if (!userRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
-        }
-        if (userRepository.existsByEmail(email)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "User with this email already exists");
-        }
-        userRepository.updateEmailById(id, email);
+    public void updateEmail(UUID userId, String email) {
+        validateEmailUniqueness(email);
+        ensureUserExists(userId);
+        userRepository.updateEmailById(userId, email);
     }
 
-    // Update a User's password
-    public void updatePassword(UUID id, String passwordHash) {
-        if (!userRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
-        }
-        userRepository.updatePasswordById(id, passwordHash);
+    public void updatePassword(UUID userId, String passwordHash) {
+        ensureUserExists(userId);
+        userRepository.updatePasswordById(userId, passwordHash);
     }
 
-    // Delete a User by ID
-    public void deleteUserById(UUID id) {
-        if (!userRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
-        }
-        userRepository.deleteById(id);
+    public void deleteUserById(UUID userId) {
+        User user = findUserById(userId);
+        userRepository.delete(user);
     }
 
-    // Delete a User by email
     public void deleteUserByEmail(String email) {
-        if (!userRepository.existsByEmail(email)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
-        }
-        userRepository.deleteByEmail(email);
+        User user = findUserByEmail(email);
+        userRepository.delete(user);
     }
 
-    // Retrieve all Users
-    public List<UserDto> getAllUsers() {
-        List<User> users = userRepository.findAll();
-        //manually map
-        return users.stream()
-                .map(userMapper::toDto)
-                .collect(Collectors.toList());
+    // Private helper methods
+
+    //@TODO: Should these be public? Why or why not?
+    //DOMAIN DRIVEN DESIGN: These methods are private because they are only used internally by the UserService class.
+    public User findUserById(UUID userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found with ID: " + userId));
     }
+
+    private User findUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User not found with email: " + email));
+    }
+
+    private void validateEmailUniqueness(String email) {
+        if (userRepository.existsByEmail(email)) {
+            throw new UserAlreadyExistsException("User with email " + email + " already exists");
+        }
+    }
+
+    private void ensureUserExists(UUID userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new NotFoundException("User not found with ID: " + userId);
+        }
+    }
+
 }
