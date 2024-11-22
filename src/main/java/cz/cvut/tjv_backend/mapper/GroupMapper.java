@@ -12,16 +12,6 @@ public interface GroupMapper {
 
     Group toEntityFromCreateGroupDto(CreateGroupDto createGroupDto);
 
-//    @AfterMapping
-//    default void linkUserRoles(@MappingTarget Group group) {
-//        group.getUserRoles().forEach(userRole -> userRole.setGroup(group));
-//    }
-//
-//    @AfterMapping
-//    default void linkSharedFiles(@MappingTarget Group group) {
-//        group.getSharedFiles().forEach(sharedFile -> sharedFile.setGroup(group));
-//    }
-
     GroupDto toDto(Group group);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
@@ -31,7 +21,6 @@ public interface GroupMapper {
     Group partialUpdate(CreateGroupDto groupDto, @MappingTarget Group group);
 
     Group toEntity(GroupUpdateDto groupUpdateDto);
-
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     Group partialUpdate(GroupUpdateDto groupUpdateDto, @MappingTarget Group group);

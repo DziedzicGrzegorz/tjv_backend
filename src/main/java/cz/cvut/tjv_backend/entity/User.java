@@ -37,6 +37,7 @@ public class User {
     private Set<UserGroupRole> groupRoles = new HashSet<>();
 
     @OneToMany(mappedBy = "sharedWith", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<SharedFileWithUser> sharedFiles;
+    @Builder.Default
+    private Set<SharedFileWithUser> sharedFiles = new HashSet<>();
 }
 
