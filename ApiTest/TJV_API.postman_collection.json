@@ -368,6 +368,7 @@
 									"pm.environment.set('fileIds', JSON.stringify(fileIds));",
 									"",
 									"    pm.environment.set('fileId', jsonData.id);",
+									"    pm.environment.set('fileOwnerId', pm.environment.get('userId'));",
 									"    pm.environment.set('filename', jsonData.filename);",
 									"    pm.environment.set('fileType', jsonData.fileType);",
 									"    pm.environment.set('size', jsonData.size);",
@@ -1147,7 +1148,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "[\n    \"e99a83d6-f325-4605-93a4-460619bb7aaa\",\n    \"{{userId}}\"\n]\n",
+							"raw": "[\n    \"075b8306-bfe9-4cb0-8e75-fa7b9e1c9e4a\"\n]\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1199,6 +1200,563 @@
 								"groups",
 								"{{groupId}}",
 								"remove-users"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "sharing",
+			"item": [
+				{
+					"name": "Share with user",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Pre-request script to generate data for FileSharingWithUserRequest",
+									"",
+									"// Generate random UUID for fileId and userId",
+									"",
+									"",
+									"// Set permission type (e.g., \"READ\", \"WRITE\")",
+									"pm.environment.set('permission', 'READ');",
+									"",
+									"// Create request body and store in environment",
+									"var requestBody = {",
+									"    \"fileId\": pm.environment.get('fileId'),",
+									"    \"userId\": pm.environment.get('userId'),",
+									"    \"permission\": pm.environment.get('permission')",
+									"};",
+									"pm.environment.set('fileSharingRequestBody', JSON.stringify(requestBody));",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test script to verify file sharing with user",
+									"",
+									"pm.test(\"File sharing with user - status is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Parse the response and check for expected fields",
+									"var jsonData = pm.response.json();",
+									"",
+									"pm.test(\"File sharing response contains correct properties\", function () {",
+									"    // Verify root properties",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.nested.property('permission', pm.environment.get('permission'));",
+									"    pm.expect(jsonData).to.have.property('sharedAt').that.is.a('string');",
+									"",
+									"    // Verify nested 'file' properties",
+									"    pm.expect(jsonData).to.have.nested.property('file.id', pm.environment.get('fileId'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.owner.id', pm.environment.get('fileOwnerId'));",
+									"",
+									"    pm.expect(jsonData).to.have.nested.property('file.filename', pm.environment.get('filename'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.fileType', pm.environment.get('fileType'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.size', pm.environment.get('fileSize'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.version', pm.environment.get('fileVersion'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.createdAt').that.is.a('string');",
+									"    pm.expect(jsonData).to.have.nested.property('file.updatedAt').that.is.a('string');",
+									"",
+									"    // Save the shared file details in environment variables for further use",
+									"    pm.environment.set('sharedFileId', jsonData.id);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{{fileSharingRequestBody}}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/shared-files/user",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"shared-files",
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Share with group",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Pre-request script to generate file sharing data for group",
+									"pm.environment.set('fileId', pm.environment.get('fileId')); // Assuming you have already stored fileId",
+									"pm.environment.set('groupId', pm.environment.get('groupId')); // Assuming you have already stored groupId",
+									"",
+									"var permission = 'READ'; // Define the permission (e.g., READ, WRITE)",
+									"pm.environment.set('permission', permission);",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test script to verify file sharing with user",
+									"",
+									"pm.test(\"File sharing with user - status is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Parse the response and check for expected fields",
+									"var jsonData = pm.response.json();",
+									"",
+									"pm.test(\"File sharing response contains correct properties\", function () {",
+									"    // Verify root properties",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.nested.property('permission', pm.environment.get('permission'));",
+									"    pm.expect(jsonData).to.have.property('sharedAt').that.is.a('string');",
+									"",
+									"    // Verify nested 'file' properties",
+									"    pm.expect(jsonData).to.have.nested.property('file.id', pm.environment.get('fileId'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.owner.id', pm.environment.get('userId'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.owner.username', pm.environment.get('username'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.owner.email', pm.environment.get('userEmail'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.filename', pm.environment.get('filename'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.fileType', pm.environment.get('fileType'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.size', pm.environment.get('fileSize'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.version', pm.environment.get('fileVersion'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.createdAt').that.is.a('string');",
+									"    pm.expect(jsonData).to.have.nested.property('file.updatedAt').that.is.a('string');",
+									"",
+									"    // Save the shared file details in environment variables for further use",
+									"    pm.environment.set('sharedFileId', jsonData.id);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"fileId\": \"{{fileId}}\",\n    \"groupId\": \"{{groupId}}\",\n    \"permission\": \"{{permission}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/shared-files/user",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"shared-files",
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get file shared with user",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Pre-request script to generate file sharing data for group",
+									"pm.environment.set('fileId', pm.environment.get('fileId')); // Assuming you have already stored fileId",
+									"pm.environment.set('groupId', pm.environment.get('groupId')); // Assuming you have already stored groupId",
+									"",
+									"var permission = 'READ'; // Define the permission (e.g., READ, WRITE)",
+									"pm.environment.set('permission', permission);",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test script to verify file sharing with user",
+									"",
+									"pm.test(\"File sharing with user - status is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Parse the response and check for expected fields",
+									"var jsonData = pm.response.json();",
+									"",
+									"pm.test(\"File sharing response contains correct properties\", function () {",
+									"    // Verify root properties",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.nested.property('permission', pm.environment.get('permission'));",
+									"    pm.expect(jsonData).to.have.property('sharedAt').that.is.a('string');",
+									"",
+									"    // Verify nested 'file' properties",
+									"    pm.expect(jsonData).to.have.nested.property('file.id', pm.environment.get('fileId'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.owner.id', pm.environment.get('userId'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.owner.username', pm.environment.get('username'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.owner.email', pm.environment.get('userEmail'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.filename', pm.environment.get('filename'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.fileType', pm.environment.get('fileType'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.size', pm.environment.get('fileSize'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.version', pm.environment.get('fileVersion'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.createdAt').that.is.a('string');",
+									"    pm.expect(jsonData).to.have.nested.property('file.updatedAt').that.is.a('string');",
+									"",
+									"    // Save the shared file details in environment variables for further use",
+									"    pm.environment.set('sharedFileId', jsonData.id);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"fileId\": \"{{fileId}}\",\n    \"groupId\": \"{{groupId}}\",\n    \"permission\": \"{{permission}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/shared-files/user/{{userId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"shared-files",
+								"user",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get file shared with Group",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Pre-request script to generate file sharing data for group",
+									"pm.environment.set('fileId', pm.environment.get('fileId')); // Assuming you have already stored fileId",
+									"pm.environment.set('groupId', pm.environment.get('groupId')); // Assuming you have already stored groupId",
+									"",
+									"var permission = 'READ'; // Define the permission (e.g., READ, WRITE)",
+									"pm.environment.set('permission', permission);",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test script to verify file sharing with user",
+									"",
+									"pm.test(\"File sharing with user - status is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Parse the response and check for expected fields",
+									"var jsonData = pm.response.json();",
+									"",
+									"pm.test(\"File sharing response contains correct properties\", function () {",
+									"    // Verify root properties",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.nested.property('permission', pm.environment.get('permission'));",
+									"    pm.expect(jsonData).to.have.property('sharedAt').that.is.a('string');",
+									"",
+									"    // Verify nested 'file' properties",
+									"    pm.expect(jsonData).to.have.nested.property('file.id', pm.environment.get('fileId'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.owner.id', pm.environment.get('userId'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.owner.username', pm.environment.get('username'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.owner.email', pm.environment.get('userEmail'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.filename', pm.environment.get('filename'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.fileType', pm.environment.get('fileType'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.size', pm.environment.get('fileSize'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.version', pm.environment.get('fileVersion'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.createdAt').that.is.a('string');",
+									"    pm.expect(jsonData).to.have.nested.property('file.updatedAt').that.is.a('string');",
+									"",
+									"    // Save the shared file details in environment variables for further use",
+									"    pm.environment.set('sharedFileId', jsonData.id);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"fileId\": \"{{fileId}}\",\n    \"groupId\": \"{{groupId}}\",\n    \"permission\": \"{{permission}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/shared-files/group/{{groupId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"shared-files",
+								"group",
+								"{{groupId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete file shared with Group",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Pre-request script to generate file sharing data for group",
+									"pm.environment.set('fileId', pm.environment.get('fileId')); // Assuming you have already stored fileId",
+									"pm.environment.set('groupId', pm.environment.get('groupId')); // Assuming you have already stored groupId",
+									"",
+									"var permission = 'READ'; // Define the permission (e.g., READ, WRITE)",
+									"pm.environment.set('permission', permission);",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test script to verify file sharing with user",
+									"",
+									"pm.test(\"File sharing with user - status is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Parse the response and check for expected fields",
+									"var jsonData = pm.response.json();",
+									"",
+									"pm.test(\"File sharing response contains correct properties\", function () {",
+									"    // Verify root properties",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.nested.property('permission', pm.environment.get('permission'));",
+									"    pm.expect(jsonData).to.have.property('sharedAt').that.is.a('string');",
+									"",
+									"    // Verify nested 'file' properties",
+									"    pm.expect(jsonData).to.have.nested.property('file.id', pm.environment.get('fileId'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.owner.id', pm.environment.get('userId'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.owner.username', pm.environment.get('username'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.owner.email', pm.environment.get('userEmail'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.filename', pm.environment.get('filename'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.fileType', pm.environment.get('fileType'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.size', pm.environment.get('fileSize'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.version', pm.environment.get('fileVersion'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.createdAt').that.is.a('string');",
+									"    pm.expect(jsonData).to.have.nested.property('file.updatedAt').that.is.a('string');",
+									"",
+									"    // Save the shared file details in environment variables for further use",
+									"    pm.environment.set('sharedFileId', jsonData.id);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"fileId\": \"{{fileId}}\",\n    \"groupId\": \"{{groupId}}\",\n    \"permission\": \"{{permission}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/shared-files/group/{{groupId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"shared-files",
+								"group",
+								"{{groupId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete file shared with User",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Pre-request script to generate file sharing data for group",
+									"pm.environment.set('fileId', pm.environment.get('fileId')); // Assuming you have already stored fileId",
+									"pm.environment.set('groupId', pm.environment.get('groupId')); // Assuming you have already stored groupId",
+									"",
+									"var permission = 'READ'; // Define the permission (e.g., READ, WRITE)",
+									"pm.environment.set('permission', permission);",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test script to verify file sharing with user",
+									"",
+									"pm.test(\"File sharing with user - status is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Parse the response and check for expected fields",
+									"var jsonData = pm.response.json();",
+									"",
+									"pm.test(\"File sharing response contains correct properties\", function () {",
+									"    // Verify root properties",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.nested.property('permission', pm.environment.get('permission'));",
+									"    pm.expect(jsonData).to.have.property('sharedAt').that.is.a('string');",
+									"",
+									"    // Verify nested 'file' properties",
+									"    pm.expect(jsonData).to.have.nested.property('file.id', pm.environment.get('fileId'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.owner.id', pm.environment.get('userId'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.owner.username', pm.environment.get('username'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.owner.email', pm.environment.get('userEmail'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.filename', pm.environment.get('filename'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.fileType', pm.environment.get('fileType'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.size', pm.environment.get('fileSize'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.version', pm.environment.get('fileVersion'));",
+									"    pm.expect(jsonData).to.have.nested.property('file.createdAt').that.is.a('string');",
+									"    pm.expect(jsonData).to.have.nested.property('file.updatedAt').that.is.a('string');",
+									"",
+									"    // Save the shared file details in environment variables for further use",
+									"    pm.environment.set('sharedFileId', jsonData.id);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"fileId\": \"{{fileId}}\",\n    \"groupId\": \"{{groupId}}\",\n    \"permission\": \"{{permission}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/shared-files/group/{{groupId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"shared-files",
+								"group",
+								"{{groupId}}"
 							]
 						}
 					},

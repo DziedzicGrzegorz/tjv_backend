@@ -9,10 +9,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -36,10 +34,10 @@ public class SharedFileController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdSharedFile);
     }
 
-    // Retrieve shared file with user by ID
+    // Retrieve shared file with user by ID (file to user)
     @GetMapping("/user/{id}")
-    public ResponseEntity<SharedFileWithUserDto> getSharedFileWithUserById(@PathVariable UUID id) {
-        SharedFileWithUserDto sharedFileWithUser = sharedFileService.getSharedFileWithUserById(id);
+    public ResponseEntity<List<SharedFileWithUserDto>> getSharedFileWithUserById(@PathVariable UUID id) {
+        List<SharedFileWithUserDto> sharedFileWithUser = sharedFileService.getSharedFilesWithUser(id);
         return ResponseEntity.ok(sharedFileWithUser);
     }
 
@@ -50,31 +48,19 @@ public class SharedFileController {
         return ResponseEntity.ok(sharedFileWithGroup);
     }
 
-    // Delete shared file with a user
-    @DeleteMapping("/user/{id}")
-    public ResponseEntity<Void> deleteSharedFileWithUser(@PathVariable UUID id) {
-        sharedFileService.deleteSharedFileWithUser(id);
+    @DeleteMapping("/user/{userId}/file/{fileId}")
+    public ResponseEntity<Void> deleteSharedFileWithUser(
+            @PathVariable UUID userId,
+            @PathVariable UUID fileId) {
+        sharedFileService.deleteSharedFileWithUser(userId, fileId);
         return ResponseEntity.noContent().build();
     }
 
-    // Delete shared file with a group
-    @DeleteMapping("/group/{id}")
-    public ResponseEntity<Void> deleteSharedFileWithGroup(@PathVariable UUID id) {
-        sharedFileService.deleteSharedFileWithGroup(id);
+    @DeleteMapping("/group/{groupId}/file/{fileId}")
+    public ResponseEntity<Void> deleteSharedFileWithGroup(
+            @PathVariable UUID groupId,
+            @PathVariable UUID fileId) {
+        sharedFileService.deleteSharedFileWithGroup(groupId, fileId);
         return ResponseEntity.noContent().build();
-    }
-
-    // Find all files shared with a specific user
-    @GetMapping("/user")
-    public ResponseEntity<List<SharedFileWithUserDto>> getFilesSharedWithUser(@RequestParam UUID userId) {
-        List<SharedFileWithUserDto> sharedFiles = sharedFileService.getFilesSharedWithUser(userId);
-        return ResponseEntity.ok(sharedFiles);
-    }
-
-    // Find all files shared with a specific group
-    @GetMapping("/group")
-    public ResponseEntity<List<SharedFileWithGroupDto>> getFilesSharedWithGroup(@RequestParam UUID groupId) {
-        List<SharedFileWithGroupDto> sharedFiles = sharedFileService.getFilesSharedWithGroup(groupId);
-        return ResponseEntity.ok(sharedFiles);
     }
 }

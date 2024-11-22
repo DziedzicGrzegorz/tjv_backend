@@ -33,5 +33,6 @@ public interface SharedFileWithUserRepository extends JpaRepository<SharedFileWi
 
 
     Optional<SharedFileWithUser> findByFileIdAndSharedWithId(UUID fileId, UUID user);
+    List<SharedFileWithUser> findAllBySharedWithId(UUID userId);
 }
 

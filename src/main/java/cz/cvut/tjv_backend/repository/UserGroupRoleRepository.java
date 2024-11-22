@@ -1,6 +1,7 @@
 package cz.cvut.tjv_backend.repository;
 
 import cz.cvut.tjv_backend.entity.Group;
+import cz.cvut.tjv_backend.entity.SharedFileWithUser;
 import cz.cvut.tjv_backend.entity.User;
 import cz.cvut.tjv_backend.entity.UserGroupRole;
 import cz.cvut.tjv_backend.entity.utils.Role;
@@ -33,6 +34,4 @@ public interface UserGroupRoleRepository extends JpaRepository<UserGroupRole, UU
     void deleteByUserIdAndGroupId(@Param("userId") UUID userId, @Param("groupId") UUID groupId);
 
     Optional<UserGroupRole> findByUserIdAndGroupId(UUID userId, UUID group);
-
-
 }

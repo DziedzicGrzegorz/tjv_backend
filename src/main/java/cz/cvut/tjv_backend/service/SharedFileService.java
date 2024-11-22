@@ -3,6 +3,7 @@ package cz.cvut.tjv_backend.service;
 import cz.cvut.tjv_backend.dto.SharedFileWithGroupDto;
 import cz.cvut.tjv_backend.dto.SharedFileWithUserDto;
 import cz.cvut.tjv_backend.entity.*;
+import cz.cvut.tjv_backend.entity.utils.Role;
 import cz.cvut.tjv_backend.exception.Exceptions.FileAlreadySharedException;
 import cz.cvut.tjv_backend.exception.Exceptions.NotFoundException;
 import cz.cvut.tjv_backend.exception.Exceptions.SelfFileShareException;
@@ -14,6 +15,7 @@ import cz.cvut.tjv_backend.request.FileSharingWithUserRequest;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import cz.cvut.tjv_backend.exception.Exceptions.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -117,15 +119,17 @@ public class SharedFileService {
                 .build();
     }
 
-
-
     // Retrieve shared file with user by ID
-    public SharedFileWithUserDto getSharedFileWithUserById(UUID id) {
-        SharedFileWithUser sharedFileWithUser = sharedFileWithUserRepository.findById(id).orElseThrow(
-                () -> new EntityNotFoundException("SharedFileWithUser not found")
-        );
-        return sharedFileWithUserMapper.toDto(sharedFileWithUser);
+    public List<SharedFileWithUserDto> getSharedFilesWithUser(UUID userId) {
+        List<SharedFileWithUser> sharedFiles = sharedFileWithUserRepository.findAllBySharedWithId(userId);
+        if (sharedFiles.isEmpty()) {
+            throw new EntityNotFoundException("No files shared with user ID: " + userId);
+        }
+        return sharedFiles.stream()
+                .map(sharedFileWithUserMapper::toDto)
+                .collect(Collectors.toList());
     }
+
 
     // Updated service method in SharedFileService
     public List<SharedFileWithGroupDto> getSharedFileWithGroupById(UUID id) {
@@ -139,25 +143,24 @@ public class SharedFileService {
     }
 
     // Delete shared file with a user
-    public void deleteSharedFileWithUser(UUID id) {
-        SharedFileWithUser sharedFileWithUser = sharedFileWithUserRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("SharedFileWithUser not found"));
-        sharedFileWithUserRepository.delete(sharedFileWithUser);
+    public void deleteSharedFileWithUser(UUID userId, UUID fileId) {
+        SharedFileWithUser sharedFile = sharedFileWithUserRepository
+                .findByFileIdAndSharedWithId(fileId, userId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Shared file not found for fileId: " + fileId + " and userId: " + userId
+                ));
+        sharedFileWithUserRepository.delete(sharedFile);
     }
 
     // Delete shared file with a group
-    public void deleteSharedFileWithGroup(UUID id) {
-        SharedFileWithGroup sharedFileWithGroup = sharedFileWithGroupRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("SharedFileWithGroup not found"));
-        sharedFileWithGroupRepository.delete(sharedFileWithGroup);
-    }
+    public void deleteSharedFileWithGroup(UUID groupId, UUID fileId) {
+        // Retrieve the shared file
+        SharedFileWithGroup sharedFile = sharedFileWithGroupRepository
+                .findByFileIdAndGroupId(fileId, groupId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Shared file not found for fileId: " + fileId + " and groupId: " + groupId));
 
-    // Find all files shared with a specific user
-    public List<SharedFileWithUserDto> getFilesSharedWithUser(UUID userId) {
-        List<SharedFileWithUser> sharedFileWithUser = sharedFileWithUserRepository.findFilesSharedWithUser(userId);
-        return sharedFileWithUser.stream()
-                .map(sharedFileWithUserMapper::toDto)
-                .collect(Collectors.toList());
+        sharedFileWithGroupRepository.delete(sharedFile);
     }
 
     // Find all files shared with a specific group
