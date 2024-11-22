@@ -79,4 +79,10 @@ public class Exceptions {
             super(message);
         }
     }
+
+    public static class GroupAlreadyExistsException extends RuntimeException {
+        public GroupAlreadyExistsException(String message) {
+            super(message);
+        }
+    }
 }

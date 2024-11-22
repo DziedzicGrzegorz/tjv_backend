@@ -33,7 +33,8 @@ public class Group {
 
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
     @Setter
-    private Set<SharedFileWithGroup> sharedFiles;
+    @Builder.Default
+    private Set<SharedFileWithGroup> sharedFiles = new HashSet<>();
 
 }
 

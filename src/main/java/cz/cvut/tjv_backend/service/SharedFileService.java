@@ -4,16 +4,15 @@ import cz.cvut.tjv_backend.dto.SharedFileWithGroupDto;
 import cz.cvut.tjv_backend.dto.SharedFileWithUserDto;
 import cz.cvut.tjv_backend.entity.*;
 import cz.cvut.tjv_backend.exception.Exceptions.FileAlreadySharedException;
-import cz.cvut.tjv_backend.exception.Exceptions.NotFoundException;
 import cz.cvut.tjv_backend.exception.Exceptions.SelfFileShareException;
 import cz.cvut.tjv_backend.mapper.SharedFileWithGroupMapper;
 import cz.cvut.tjv_backend.mapper.SharedFileWithUserMapper;
 import cz.cvut.tjv_backend.repository.*;
 import cz.cvut.tjv_backend.request.FileSharingWithGroupRequest;
 import cz.cvut.tjv_backend.request.FileSharingWithUserRequest;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import cz.cvut.tjv_backend.exception.Exceptions.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -86,18 +85,18 @@ public class SharedFileService {
 
     private File getFileById(UUID fileId) {
         return fileRepository.findById(fileId)
-                .orElseThrow(() -> new EntityNotFoundException("File not found with ID: " + fileId));
+                .orElseThrow(() -> new NotFoundException("File not found with ID: " + fileId));
     }
 
     private Group getGroupById(UUID groupId) {
         return groupRepository.findById(groupId)
-                .orElseThrow(() -> new EntityNotFoundException("Group not found with ID: " + groupId));
+                .orElseThrow(() -> new NotFoundException("Group not found with ID: " + groupId));
     }
 
     private void validateUserMembershipInGroup(UUID userId, UUID groupId) {
         boolean isMember = userGroupRoleRepository.existsByUserIdAndGroupId(userId, groupId);
         if (!isMember) {
-            throw new EntityNotFoundException("User with ID " + userId + " is not a member of group with ID " + groupId);
+            throw new NotFoundException("User with ID " + userId + " is not a member of group with ID " + groupId);
         }
     }
 
@@ -121,7 +120,7 @@ public class SharedFileService {
     public List<SharedFileWithUserDto> getSharedFilesWithUser(UUID userId) {
         List<SharedFileWithUser> sharedFiles = sharedFileWithUserRepository.findAllBySharedWithId(userId);
         if (sharedFiles.isEmpty()) {
-            throw new EntityNotFoundException("No files shared with user ID: " + userId);
+            throw new NotFoundException("No files shared with user ID: " + userId);
         }
         return sharedFiles.stream()
                 .map(sharedFileWithUserMapper::toDto)
@@ -133,7 +132,7 @@ public class SharedFileService {
     public List<SharedFileWithGroupDto> getSharedFileWithGroupById(UUID id) {
         List<SharedFileWithGroup> sharedFileWithGroup = sharedFileWithGroupRepository.findFilesSharedWithGroup(id);
         if (sharedFileWithGroup.isEmpty()) {
-            throw new EntityNotFoundException("Shared file not found");
+            throw new NotFoundException("Shared file not found");
         }
         return sharedFileWithGroup.stream()
                 .map(sharedFileWithGroupMapper::toDto)
@@ -144,7 +143,7 @@ public class SharedFileService {
     public void deleteSharedFileWithUser(UUID userId, UUID fileId) {
         SharedFileWithUser sharedFile = sharedFileWithUserRepository
                 .findByFileIdAndSharedWithId(fileId, userId)
-                .orElseThrow(() -> new EntityNotFoundException(
+                .orElseThrow(() -> new NotFoundException(
                         "Shared file not found for fileId: " + fileId + " and userId: " + userId
                 ));
         sharedFileWithUserRepository.delete(sharedFile);
@@ -155,7 +154,7 @@ public class SharedFileService {
         // Retrieve the shared file
         SharedFileWithGroup sharedFile = sharedFileWithGroupRepository
                 .findByFileIdAndGroupId(fileId, groupId)
-                .orElseThrow(() -> new EntityNotFoundException(
+                .orElseThrow(() -> new NotFoundException(
                         "Shared file not found for fileId: " + fileId + " and groupId: " + groupId));
 
         sharedFileWithGroupRepository.delete(sharedFile);

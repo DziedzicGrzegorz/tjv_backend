@@ -77,6 +77,11 @@ public class GlobalExceptionHandler {
         return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
 
+    @ExceptionHandler(Exceptions.GroupAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleGroupAlreadyExistsException(Exceptions.GroupAlreadyExistsException ex, WebRequest request) {
+        return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, WebRequest request) {
         return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request);

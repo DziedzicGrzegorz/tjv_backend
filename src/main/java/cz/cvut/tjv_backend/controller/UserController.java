@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -31,17 +30,15 @@ public class UserController {
     // Retrieve a User by ID
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> getUserById(@PathVariable UUID id) {
-        Optional<UserDto> user = userService.getUserById(id);
-        return user.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+        UserDto user = userService.getUserById(id);
+        return ResponseEntity.ok(user);
     }
 
     // Retrieve a User by email
     @GetMapping("/email/{email}")
     public ResponseEntity<UserDto> getUserByEmail(@PathVariable String email) {
-        Optional<UserDto> user = userService.getUserByEmail(email);
-        return user.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+        UserDto user = userService.getUserByEmail(email);
+        return ResponseEntity.ok(user);
     }
 
     // Update a User's username

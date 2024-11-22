@@ -15,6 +15,8 @@ public interface GroupRepository extends JpaRepository<Group, UUID> {
 
     // Find group by name (assuming name is unique)
     Optional<Group> findByName(String name);
+    //existsByName
+    boolean existsByName(String name);
 
     //get all by user id
     @Query("SELECT g FROM Group g JOIN g.userRoles ugr WHERE ugr.user.id = :userId")
