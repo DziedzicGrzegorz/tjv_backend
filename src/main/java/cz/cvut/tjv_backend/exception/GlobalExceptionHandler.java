@@ -1,12 +1,13 @@
 package cz.cvut.tjv_backend.exception;
 
+import io.jsonwebtoken.security.SignatureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.server.ResponseStatusException;
-
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import java.time.LocalDateTime;
 
 @ControllerAdvice
@@ -30,6 +31,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exceptions.UnauthorizedException.class)
     public ResponseEntity<ErrorResponse> handleUnauthorizedException(Exceptions.UnauthorizedException ex, WebRequest request) {
         return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
+    }
+    @ExceptionHandler(Exceptions.ForbiddenOperationException.class)
+    public ResponseEntity<ErrorResponse> handleForbiddenOperationException(Exceptions.ForbiddenOperationException ex, WebRequest request) {
+        return createErrorResponse(HttpStatus.FORBIDDEN, ex.getMessage(), request);
     }
 
     @ExceptionHandler(Exceptions.StorageDeleteException.class)
@@ -80,6 +85,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exceptions.GroupAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleGroupAlreadyExistsException(Exceptions.GroupAlreadyExistsException ex, WebRequest request) {
         return createErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
+    }
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUsernameNotFoundException(UsernameNotFoundException ex, WebRequest request) {
+        return createErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request);
     }
 
     @ExceptionHandler(Exception.class)
