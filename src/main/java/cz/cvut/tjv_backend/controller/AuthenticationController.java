@@ -3,6 +3,7 @@ package cz.cvut.tjv_backend.controller;
 import cz.cvut.tjv_backend.dto.user.UserCreateDto;
 import cz.cvut.tjv_backend.request.auth.AuthenticationRequest;
 import cz.cvut.tjv_backend.request.auth.AuthenticationResponse;
+import cz.cvut.tjv_backend.request.auth.TokenRefreshRequest;
 import cz.cvut.tjv_backend.service.AuthenticationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,9 +31,14 @@ public class AuthenticationController {
     public ResponseEntity<AuthenticationResponse> authenticate(
             @RequestBody AuthenticationRequest request
     ) {
-        service.authenticate(request);
         return ResponseEntity.ok(service.authenticate(request));
     }
-    //refresh
 
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthenticationResponse> refreshToken(
+            @RequestBody @Valid TokenRefreshRequest request
+    ) {
+        AuthenticationResponse response = service.refreshToken(request);
+        return ResponseEntity.ok(response);
+    }
 }

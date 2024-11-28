@@ -117,6 +117,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
     }
 
+    @ExceptionHandler(Exceptions.InvalidRefreshTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidRefreshTokenException(Exceptions.InvalidRefreshTokenException ex, WebRequest request) {
+        return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
+    }
+
     @ExceptionHandler(Exceptions.InvalidTokenSignatureException.class)
     public ResponseEntity<ErrorResponse> handleInvalidTokenSignatureException(Exceptions.InvalidTokenSignatureException ex, WebRequest request) {
         return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);

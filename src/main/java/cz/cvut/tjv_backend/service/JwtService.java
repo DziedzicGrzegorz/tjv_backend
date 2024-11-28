@@ -1,15 +1,10 @@
 package cz.cvut.tjv_backend.service;
 
-import cz.cvut.tjv_backend.exception.Exceptions.AccessTokenExpiredException;
-import cz.cvut.tjv_backend.exception.Exceptions.InvalidTokenSignatureException;
-import cz.cvut.tjv_backend.exception.Exceptions.UnauthorizedException;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.SignatureException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,10 +18,13 @@ import java.util.function.Function;
 
 @Service
 public class JwtService {
+
     @Value("${application.security.jwt.secret-key}")
     private String secretKey;
+
     @Value("${application.security.jwt.access_expiration}")
     private long jwtAccessExpiration;
+
     @Value("${application.security.jwt.refresh_expiration}")
     private long jwtRefreshExpiration;
 
@@ -40,56 +38,66 @@ public class JwtService {
     }
 
     public String generateAccessToken(UserDetails userDetails) {
-        return generateAccessToken(new HashMap<>(), userDetails);
+        return buildToken(new HashMap<>(), userDetails, jwtAccessExpiration, "access");
     }
 
     public String generateAccessToken(
             Map<String, Object> extraClaims,
             UserDetails userDetails
     ) {
-        return buildToken(extraClaims, userDetails, jwtAccessExpiration);
+        return buildToken(extraClaims, userDetails, jwtAccessExpiration, "access");
+    }
+
+    public String generateRefreshToken(UserDetails userDetails) {
+        return buildToken(new HashMap<>(), userDetails, jwtRefreshExpiration, "refresh");
     }
 
     public String generateRefreshToken(
             Map<String, Object> extraClaims,
             UserDetails userDetails
     ) {
-        return buildToken(extraClaims, userDetails, jwtRefreshExpiration);
+        return buildToken(extraClaims, userDetails, jwtRefreshExpiration, "refresh");
     }
 
     private String buildToken(
             Map<String, Object> extraClaims,
             UserDetails userDetails,
-            long expiration
+            long expiration,
+            String tokenType
     ) {
+        extraClaims.put("tokenType", tokenType);
+
         var authorities = userDetails.getAuthorities()
-                .stream().
-                map(GrantedAuthority::getAuthority)
+                .stream()
+                .map(GrantedAuthority::getAuthority)
                 .toList();
-        return Jwts
-                .builder()
+
+        return Jwts.builder()
                 .claims(extraClaims)
                 .subject(userDetails.getUsername())
-                .issuedAt(new Date(System.currentTimeMillis()))
+                .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .claim("authorities", authorities)
                 .signWith(getSignInKey())
                 .compact();
+
     }
 
-    public boolean isTokenValid(String authToken) {
+    public boolean isTokenValid(String token) {
+        return validateToken(token, "access");
+    }
+
+    public boolean isRefreshTokenValid(String token) {
+        return validateToken(token, "refresh");
+    }
+
+    private boolean validateToken(String token, String expectedTokenType) {
         try {
-            Jwts.parser()
-                    .verifyWith(getSignInKey())
-                    .build()
-                    .parseSignedClaims(authToken);
-            return true;
-        } catch (ExpiredJwtException e) {
-            throw new AccessTokenExpiredException("Token has expired");
-        } catch (SignatureException e) {
-            throw new InvalidTokenSignatureException("Invalid token signature");
-        } catch (JwtException | IllegalArgumentException e) {
-            throw new UnauthorizedException("Token JWT is invalid ");
+            Claims claims = extractAllClaims(token);
+            String tokenType = claims.get("tokenType", String.class);
+            return expectedTokenType.equals(tokenType) && !isTokenExpired(token);
+        } catch (JwtException e) {
+            return false;
         }
     }
 

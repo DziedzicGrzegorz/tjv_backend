@@ -118,4 +118,10 @@ public class Exceptions {
             super(message, cause);
         }
     }
+
+    public static class InvalidRefreshTokenException extends RuntimeException {
+        public InvalidRefreshTokenException(String message) {
+            super(message);
+        }
+    }
 }
