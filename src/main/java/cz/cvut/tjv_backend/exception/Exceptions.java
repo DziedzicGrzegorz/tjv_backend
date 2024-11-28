@@ -1,5 +1,7 @@
 package cz.cvut.tjv_backend.exception;
 
+import org.springframework.security.core.AuthenticationException;
+
 public class Exceptions {
 
     public static class NotFoundException extends RuntimeException {
@@ -82,6 +84,48 @@ public class Exceptions {
 
     public static class GroupAlreadyExistsException extends RuntimeException {
         public GroupAlreadyExistsException(String message) {
+            super(message);
+        }
+    }
+
+    public static class AccessTokenExpiredException extends AuthenticationException {
+        public AccessTokenExpiredException(String msg, Throwable cause) {
+            super(msg, cause);
+        }
+
+        public AccessTokenExpiredException(String msg) {
+            super(msg);
+        }
+    }
+
+    public static class InvalidTokenSignatureException extends RuntimeException {
+        public InvalidTokenSignatureException(String message) {
+            super(message);
+        }
+
+        public InvalidTokenSignatureException(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+
+    //token not found
+    public static class MissingAccessToken extends RuntimeException {
+        public MissingAccessToken(String message) {
+            super(message);
+        }
+
+        public MissingAccessToken(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+
+    public static class InvalidAccessTokenException extends RuntimeException {
+        public InvalidAccessTokenException(String message) {
+            super(message);
+        }
+    }
+    public static class InvalidRefreshTokenException extends RuntimeException {
+        public InvalidRefreshTokenException(String message) {
             super(message);
         }
     }

@@ -8,19 +8,36 @@ import cz.cvut.tjv_backend.exception.Exceptions.UserAlreadyExistsException;
 import cz.cvut.tjv_backend.mapper.UserMapper;
 import cz.cvut.tjv_backend.repository.UserRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
 @Service
 @AllArgsConstructor
-public class UserService {
+public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserDto createUser(UserCreateDto userCreateDto) {
-        validateEmailUniqueness(userCreateDto.getEmail());
+    @Override
+    @Transactional
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+
+    public UserDto createUser(UserCreateDto userCreateDtoRequest) {
+        validateEmailUniqueness(userCreateDtoRequest.getEmail());
+        validateUsernameUniqueness(userCreateDtoRequest.getUsername());
+        String passwordHash = passwordEncoder.encode(userCreateDtoRequest.getPassword());
+
+        UserCreateDto userCreateDto = new UserCreateDto(UUID.randomUUID(), userCreateDtoRequest.getUsername(), userCreateDtoRequest.getEmail(), passwordHash);
         User user = userMapper.toEntity(userCreateDto);
         User savedUser = userRepository.save(user);
         return userMapper.toDto(savedUser);
@@ -82,10 +99,15 @@ public class UserService {
         }
     }
 
+    private void validateUsernameUniqueness(String email) {
+        if (userRepository.existsByUsername(email)) {
+            throw new UserAlreadyExistsException("User with email " + email + " already exists");
+        }
+    }
+
     private void ensureUserExists(UUID userId) {
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("User not found with ID: " + userId);
         }
     }
-
 }

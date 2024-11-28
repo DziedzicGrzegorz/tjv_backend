@@ -5,9 +5,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+
 public class HealthController {
     @GetMapping("/healthz")
     public ResponseEntity<String> health() {
+        return ResponseEntity.ok("OK");
+    }
+
+    @GetMapping("/test")
+    public ResponseEntity<String> health2() {
         return ResponseEntity.ok("OK");
     }
 }
