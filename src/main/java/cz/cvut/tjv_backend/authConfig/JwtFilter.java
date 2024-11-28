@@ -2,6 +2,8 @@ package cz.cvut.tjv_backend.authConfig;
 
 import cz.cvut.tjv_backend.exception.Exceptions;
 import cz.cvut.tjv_backend.service.JwtService;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -41,26 +43,38 @@ public class JwtFilter extends OncePerRequestFilter {
             String jwt = parseJwt(request);
 
             if (jwt == null) {
-                // No JWT token found in request headers
                 throw new JwtException("Missing or invalid Authorization header");
             }
-            if (jwtService.isTokenValid(jwt)) {
-                String username = jwtService.extractUsername(jwt);
 
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null,
-                        userDetails.getAuthorities());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            // Validate token and extract claims
+            Claims claims = jwtService.validateAndExtractClaims(jwt, TOKEN_TYPE.ACCESS);
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            }
+            String username = claims.getSubject();
+
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities()
+            );
+            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        } catch (ExpiredJwtException e) {
+            handlerExceptionResolver.resolveException(
+                    request, response, null, new Exceptions.AccessTokenExpiredException("Access token expired")
+            );
+            return;
+
         } catch (JwtException e) {
-            logger.error("Cannot set user authentication: {}", e);
-            handlerExceptionResolver.resolveException(request, response, null, new Exceptions.MissingAccessToken("Missing or invalid Authorization header"));
+            handlerExceptionResolver.resolveException(
+                    request, response, null, new Exceptions.InvalidAccessTokenException("Invalid token")
+            );
             return;
         }
+
         filterChain.doFilter(request, response);
     }
+
 
     private String parseJwt(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");

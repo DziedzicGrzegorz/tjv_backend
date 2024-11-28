@@ -119,6 +119,11 @@ public class Exceptions {
         }
     }
 
+    public static class InvalidAccessTokenException extends RuntimeException {
+        public InvalidAccessTokenException(String message) {
+            super(message);
+        }
+    }
     public static class InvalidRefreshTokenException extends RuntimeException {
         public InvalidRefreshTokenException(String message) {
             super(message);

@@ -1,5 +1,6 @@
 package cz.cvut.tjv_backend.exception;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.security.SignatureException;
 import org.springframework.http.HttpStatus;
@@ -121,9 +122,17 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ErrorResponse> handleInvalidRefreshTokenException(Exceptions.InvalidRefreshTokenException ex, WebRequest request) {
         return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
     }
+    @ExceptionHandler(Exceptions.InvalidAccessTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidAccessTokenException(Exceptions.InvalidAccessTokenException ex, WebRequest request) {
+        return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
+    }
 
     @ExceptionHandler(Exceptions.InvalidTokenSignatureException.class)
     public ResponseEntity<ErrorResponse> handleInvalidTokenSignatureException(Exceptions.InvalidTokenSignatureException ex, WebRequest request) {
+        return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
+    }
+    @ExceptionHandler(ExpiredJwtException.class)
+    public ResponseEntity<ErrorResponse> handleExpiredJwtException(ExpiredJwtException ex, WebRequest request) {
         return createErrorResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
     }
 

@@ -1,6 +1,8 @@
 package cz.cvut.tjv_backend.service;
 
+import cz.cvut.tjv_backend.authConfig.TOKEN_TYPE;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -27,6 +29,7 @@ public class JwtService {
 
     @Value("${application.security.jwt.refresh_expiration}")
     private long jwtRefreshExpiration;
+    private final String TOKEN_TYPE_NAME = "tokenType";
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -38,34 +41,34 @@ public class JwtService {
     }
 
     public String generateAccessToken(UserDetails userDetails) {
-        return buildToken(new HashMap<>(), userDetails, jwtAccessExpiration, "access");
+        return buildToken(new HashMap<>(), userDetails, jwtAccessExpiration, TOKEN_TYPE.ACCESS);
     }
 
     public String generateAccessToken(
             Map<String, Object> extraClaims,
             UserDetails userDetails
     ) {
-        return buildToken(extraClaims, userDetails, jwtAccessExpiration, "access");
+        return buildToken(extraClaims, userDetails, jwtAccessExpiration, TOKEN_TYPE.ACCESS);
     }
 
     public String generateRefreshToken(UserDetails userDetails) {
-        return buildToken(new HashMap<>(), userDetails, jwtRefreshExpiration, "refresh");
+        return buildToken(new HashMap<>(), userDetails, jwtRefreshExpiration, TOKEN_TYPE.REFRESH);
     }
 
     public String generateRefreshToken(
             Map<String, Object> extraClaims,
             UserDetails userDetails
     ) {
-        return buildToken(extraClaims, userDetails, jwtRefreshExpiration, "refresh");
+        return buildToken(extraClaims, userDetails, jwtRefreshExpiration, TOKEN_TYPE.REFRESH);
     }
 
     private String buildToken(
             Map<String, Object> extraClaims,
             UserDetails userDetails,
             long expiration,
-            String tokenType
+            TOKEN_TYPE tokenType
     ) {
-        extraClaims.put("tokenType", tokenType);
+        extraClaims.put("tokenType", tokenType.name());
 
         var authorities = userDetails.getAuthorities()
                 .stream()
@@ -83,26 +86,33 @@ public class JwtService {
 
     }
 
-    public boolean isTokenValid(String token) {
-        return validateToken(token, "access");
-    }
+    public Claims validateAndExtractClaims(String token, TOKEN_TYPE expectedTokenType) throws JwtException {
+        Claims claims = extractAllClaims(token);
 
-    public boolean isRefreshTokenValid(String token) {
-        return validateToken(token, "refresh");
-    }
-
-    private boolean validateToken(String token, String expectedTokenType) {
+        String tokenTypeString = claims.get(TOKEN_TYPE_NAME, String.class);
+        TOKEN_TYPE tokenType;
         try {
-            Claims claims = extractAllClaims(token);
-            String tokenType = claims.get("tokenType", String.class);
-            return expectedTokenType.equals(tokenType) && !isTokenExpired(token);
-        } catch (JwtException e) {
-            return false;
+            tokenType = TOKEN_TYPE.valueOf(tokenTypeString);
+        } catch (IllegalArgumentException e) {
+            throw new JwtException("Invalid token type", e);
         }
+
+        if (tokenType != expectedTokenType) {
+            throw new JwtException("Invalid token type");
+        }
+
+        if (isTokenExpired(claims)) {
+            throw new ExpiredJwtException(null, claims, "Token has expired");
+        }
+
+        return claims;
     }
 
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
+    }
+    private boolean isTokenExpired(Claims claims) {
+        return claims.getExpiration().before(new Date());
     }
 
     private Date extractExpiration(String token) {

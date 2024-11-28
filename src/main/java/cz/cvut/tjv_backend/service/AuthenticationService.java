@@ -1,11 +1,14 @@
 package cz.cvut.tjv_backend.service;
 
+import cz.cvut.tjv_backend.authConfig.TOKEN_TYPE;
 import cz.cvut.tjv_backend.dto.user.UserCreateDto;
 import cz.cvut.tjv_backend.entity.User;
 import cz.cvut.tjv_backend.exception.Exceptions.InvalidRefreshTokenException;
 import cz.cvut.tjv_backend.request.auth.AuthenticationRequest;
 import cz.cvut.tjv_backend.request.auth.AuthenticationResponse;
 import cz.cvut.tjv_backend.request.auth.TokenRefreshRequest;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -45,17 +48,20 @@ public class AuthenticationService {
                 .build();
     }
 
-    public AuthenticationResponse refreshToken(TokenRefreshRequest request) {
+    public AuthenticationResponse refreshToken(TokenRefreshRequest request) throws JwtException {
         String refreshToken = request.getRefreshToken();
 
-        if (!jwtService.isRefreshTokenValid(refreshToken)) {
-            throw new InvalidRefreshTokenException("Invalid or expired refresh token");
-        }
+            // Validate the refresh token
+            jwtService.validateAndExtractClaims(refreshToken, TOKEN_TYPE.REFRESH);
 
-        String username = jwtService.extractUsername(refreshToken);
-        User user = (User) userService.loadUserByUsername(username);
+            // Extract the username from the token
+            String username = jwtService.extractUsername(refreshToken);
 
-        return generateAuthenticationResponse(user);
+            // Load user details
+            User user = (User) userService.loadUserByUsername(username);
+
+            // Generate new access and refresh tokens
+            return generateAuthenticationResponse(user);
     }
 
     private AuthenticationResponse generateAuthenticationResponse(User user) {
