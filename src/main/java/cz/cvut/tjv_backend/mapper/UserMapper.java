@@ -15,6 +15,8 @@ public interface UserMapper {
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     User partialUpdate(UserDto userDto, @MappingTarget User user);
 
+    // UserRole to user by default
+    @Mapping(target = "roles", expression = "java(java.util.List.of(UserRole.USER))")
     User toEntity(UserCreateDto userCreateDto);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

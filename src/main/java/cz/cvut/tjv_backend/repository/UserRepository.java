@@ -17,8 +17,12 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     // Find a User by email
     Optional<User> findByEmail(String email);
 
+    Optional<User> findByUsername(String username);
+
     // Check if a User exists by email
     boolean existsByEmail(String email);
+
+    boolean existsByUsername(String email);
 
     // Update a User's username by IDw
     @Modifying
@@ -35,7 +39,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     // Update a User's password by ID
     @Modifying
     @Transactional
-    @Query("UPDATE User u SET u.passwordHash = :passwordHash WHERE u.id = :id")
+    @Query("UPDATE User u SET u.password = :passwordHash WHERE u.id = :id")
     void updatePasswordById(@Param("id") UUID id, @Param("passwordHash") String passwordHash);
 
     // Delete a User by email
