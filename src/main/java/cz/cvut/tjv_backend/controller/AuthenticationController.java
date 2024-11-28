@@ -29,18 +29,6 @@ public class AuthenticationController {
             @RequestBody AuthenticationRequest request
     ) {
         service.authenticate(request);
-                //check the security context;
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null) {
-            System.out.println("Authenticated user: " + authentication.getName());
-            System.out.println("Authorities: " + authentication.getAuthorities());
-            System.out.println("Details: " + authentication.getDetails());
-            System.out.println("Principal: " + authentication.getPrincipal());
-        } else {
-            System.out.println("No user is authenticated.");
-        }
-
-
         return ResponseEntity.ok(service.authenticate(request));
     }
     //refresh

@@ -26,14 +26,16 @@ public class AuthenticationService {
     }
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
+
         Authentication auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+
 
         HashMap<String, Object> claims = new HashMap<>();
         User user = ((User) auth.getPrincipal());
         claims.put("username", user.getUsername());
 
-        String jwtToken = jwtService.generateToken(claims, (User) auth.getPrincipal());
+        String jwtToken = jwtService.generateAccessToken(claims, (User) auth.getPrincipal());
         return AuthenticationResponse.builder()
                 .token(jwtToken)
                 .build();
