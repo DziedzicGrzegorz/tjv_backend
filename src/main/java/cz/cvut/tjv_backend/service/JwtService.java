@@ -1,6 +1,8 @@
 package cz.cvut.tjv_backend.service;
 
-import cz.cvut.tjv_backend.exception.Exceptions.*;
+import cz.cvut.tjv_backend.exception.Exceptions.AccessTokenExpiredException;
+import cz.cvut.tjv_backend.exception.Exceptions.InvalidTokenSignatureException;
+import cz.cvut.tjv_backend.exception.Exceptions.UnauthorizedException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;

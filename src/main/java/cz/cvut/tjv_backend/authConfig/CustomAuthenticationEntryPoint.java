@@ -15,12 +15,13 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     private final HandlerExceptionResolver handlerExceptionResolver;
+
     @Override
     public void commence(
             HttpServletRequest request,
             HttpServletResponse response,
             AuthenticationException authException
-    )  {
+    ) {
         handlerExceptionResolver.resolveException(request, response, null, new Exceptions.UnauthorizedException(authException.getMessage()));
     }
 }

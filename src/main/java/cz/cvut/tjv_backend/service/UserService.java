@@ -98,6 +98,7 @@ public class UserService implements UserDetailsService {
             throw new UserAlreadyExistsException("User with email " + email + " already exists");
         }
     }
+
     private void validateUsernameUniqueness(String email) {
         if (userRepository.existsByUsername(email)) {
             throw new UserAlreadyExistsException("User with email " + email + " already exists");

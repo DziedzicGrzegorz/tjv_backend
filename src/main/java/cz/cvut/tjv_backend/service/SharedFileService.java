@@ -4,6 +4,7 @@ import cz.cvut.tjv_backend.dto.SharedFileWithGroupDto;
 import cz.cvut.tjv_backend.dto.SharedFileWithUserDto;
 import cz.cvut.tjv_backend.entity.*;
 import cz.cvut.tjv_backend.exception.Exceptions.FileAlreadySharedException;
+import cz.cvut.tjv_backend.exception.Exceptions.NotFoundException;
 import cz.cvut.tjv_backend.exception.Exceptions.SelfFileShareException;
 import cz.cvut.tjv_backend.mapper.SharedFileWithGroupMapper;
 import cz.cvut.tjv_backend.mapper.SharedFileWithUserMapper;
@@ -12,7 +13,6 @@ import cz.cvut.tjv_backend.request.FileSharingWithGroupRequest;
 import cz.cvut.tjv_backend.request.FileSharingWithUserRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import cz.cvut.tjv_backend.exception.Exceptions.*;
 
 import java.time.LocalDateTime;
 import java.util.List;

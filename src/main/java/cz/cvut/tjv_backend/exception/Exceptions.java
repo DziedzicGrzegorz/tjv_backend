@@ -87,6 +87,7 @@ public class Exceptions {
             super(message);
         }
     }
+
     public static class AccessTokenExpiredException extends AuthenticationException {
         public AccessTokenExpiredException(String msg, Throwable cause) {
             super(msg, cause);
@@ -96,6 +97,7 @@ public class Exceptions {
             super(msg);
         }
     }
+
     public static class InvalidTokenSignatureException extends RuntimeException {
         public InvalidTokenSignatureException(String message) {
             super(message);
@@ -105,6 +107,7 @@ public class Exceptions {
             super(message, cause);
         }
     }
+
     //token not found
     public static class MissingAccessToken extends RuntimeException {
         public MissingAccessToken(String message) {
