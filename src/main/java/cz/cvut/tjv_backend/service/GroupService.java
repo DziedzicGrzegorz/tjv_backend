@@ -1,9 +1,9 @@
 package cz.cvut.tjv_backend.service;
 
-import cz.cvut.tjv_backend.dto.group.CreateGroupDto;
+import cz.cvut.tjv_backend.request.CreateGroupRequest;
 import cz.cvut.tjv_backend.dto.group.GroupDto;
-import cz.cvut.tjv_backend.dto.group.GroupUpdateDto;
-import cz.cvut.tjv_backend.dto.userGroup.CreateUserGroupRoleDto;
+import cz.cvut.tjv_backend.request.GroupUpdateRequest;
+import cz.cvut.tjv_backend.dto.CreateUserGroupRoleDto;
 import cz.cvut.tjv_backend.entity.Group;
 import cz.cvut.tjv_backend.entity.User;
 import cz.cvut.tjv_backend.entity.UserGroupRole;
@@ -31,16 +31,16 @@ public class GroupService {
     private final GroupMapper groupMapper;
 
     @Transactional
-    public GroupDto createGroup(CreateGroupDto createGroupDto) {
-        validateGroupNameUniqueness(createGroupDto.getName());
+    public GroupDto createGroup(CreateGroupRequest createGroupRequest) {
+        validateGroupNameUniqueness(createGroupRequest.getName());
 
-        Group group = groupMapper.toEntityFromCreateGroupDto(createGroupDto);
-        User founder = getUserById(createGroupDto.getOwnerId());
+        Group group = groupMapper.toEntityFromCreateGroupDto(createGroupRequest);
+        User founder = getUserById(createGroupRequest.getOwnerId());
 
         group = groupRepository.save(group);
         assignUserRoleToGroup(founder, group, Role.FOUNDER);
 
-        List<User> members = getUsersByIds(createGroupDto.getUserRoles().stream()
+        List<User> members = getUsersByIds(createGroupRequest.getUserRoles().stream()
                 .map(CreateUserGroupRoleDto::getId)
                 .collect(Collectors.toSet()));
 
@@ -51,14 +51,14 @@ public class GroupService {
         return groupMapper.toDto(newGroup);
     }
 
-    public GroupDto updateGroup(GroupUpdateDto groupUpdateDto) {
-        Group existingGroup = getGroupByIdEntity(groupUpdateDto.getId());
+    public GroupDto updateGroup(GroupUpdateRequest groupUpdateRequest) {
+        Group existingGroup = getGroupByIdEntity(groupUpdateRequest.getId());
 
 
         Group updatedEntity = Group.builder()
                 .id(existingGroup.getId())
-                .name(groupUpdateDto.getName())
-                .description(groupUpdateDto.getDescription())
+                .name(groupUpdateRequest.getName())
+                .description(groupUpdateRequest.getDescription())
                 .userRoles(existingGroup.getUserRoles())
                 .sharedFiles(existingGroup.getSharedFiles())
                 .build();

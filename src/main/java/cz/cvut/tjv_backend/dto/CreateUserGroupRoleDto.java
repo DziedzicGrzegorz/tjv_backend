@@ -1,4 +1,4 @@
-package cz.cvut.tjv_backend.dto.userGroup;
+package cz.cvut.tjv_backend.dto;
 
 import cz.cvut.tjv_backend.entity.utils.Role;
 import lombok.AllArgsConstructor;
@@ -16,5 +16,6 @@ import java.util.UUID;
 @NoArgsConstructor
 public class CreateUserGroupRoleDto implements Serializable {
     private UUID id;
+
     private Role role;
 }

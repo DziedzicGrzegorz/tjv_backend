@@ -1,6 +1,6 @@
 package cz.cvut.tjv_backend.mapper;
 
-import cz.cvut.tjv_backend.dto.FileFullDto;
+import cz.cvut.tjv_backend.dto.file.FileFullDto;
 import cz.cvut.tjv_backend.dto.file.FileDto;
 import cz.cvut.tjv_backend.entity.File;
 import org.mapstruct.*;

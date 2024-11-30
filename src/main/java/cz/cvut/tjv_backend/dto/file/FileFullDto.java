@@ -1,5 +1,7 @@
-package cz.cvut.tjv_backend.dto;
+package cz.cvut.tjv_backend.dto.file;
 
+import cz.cvut.tjv_backend.dto.SharedFileWithGroupDto;
+import cz.cvut.tjv_backend.dto.SharedFileWithUserDto;
 import cz.cvut.tjv_backend.dto.user.UserShortDto;
 import lombok.Value;
 
