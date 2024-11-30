@@ -5,6 +5,7 @@ import cz.cvut.tjv_backend.dto.SharedFileWithUserDto;
 import cz.cvut.tjv_backend.request.FileSharingWithGroupRequest;
 import cz.cvut.tjv_backend.request.FileSharingWithUserRequest;
 import cz.cvut.tjv_backend.service.SharedFileService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,14 +23,14 @@ public class SharedFileController {
 
     // Share a file with a user
     @PostMapping("/user")
-    public ResponseEntity<SharedFileWithUserDto> shareFileWithUser(@RequestBody FileSharingWithUserRequest sharedFileWithUser) {
+    public ResponseEntity<SharedFileWithUserDto> shareFileWithUser(@Valid @RequestBody FileSharingWithUserRequest sharedFileWithUser) {
         SharedFileWithUserDto createdSharedFile = sharedFileService.shareFileWithUser(sharedFileWithUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdSharedFile);
     }
 
     // Share a file with a group
     @PostMapping("/group")
-    public ResponseEntity<SharedFileWithGroupDto> shareFileWithGroup(@RequestBody FileSharingWithGroupRequest sharedFileWithGroup) {
+    public ResponseEntity<SharedFileWithGroupDto> shareFileWithGroup(@Valid @RequestBody FileSharingWithGroupRequest sharedFileWithGroup) {
         SharedFileWithGroupDto createdSharedFile = sharedFileService.shareFileWithGroup(sharedFileWithGroup);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdSharedFile);
     }

@@ -2,6 +2,7 @@ package cz.cvut.tjv_backend.controller;
 
 import cz.cvut.tjv_backend.dto.file.FileDto;
 import cz.cvut.tjv_backend.service.FileService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -43,7 +44,7 @@ public class FileController {
     }
 
     @DeleteMapping
-    public ResponseEntity<Void> deleteFiles(@RequestBody List<UUID> fileIds) {
+    public ResponseEntity<Void> deleteFiles(@Valid @RequestBody List<UUID> fileIds) {
         fileService.deleteFiles(fileIds);
         return ResponseEntity.noContent().build();
     }

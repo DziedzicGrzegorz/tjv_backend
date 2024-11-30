@@ -18,7 +18,7 @@ public class UserDto implements Serializable {
     UUID id;
     String username;
     String email;
-    List<UserRole> role;
+    List<UserRole> roles;
     Set<UserGroupRoleDto> groupRoles;
     Set<SharedFileWithUserDto> sharedFiles;
 }

@@ -1,14 +1,15 @@
 package cz.cvut.tjv_backend.controller;
 
-import cz.cvut.tjv_backend.dto.user.UserCreateDto;
+import cz.cvut.tjv_backend.request.UserCreateRequest;
 import cz.cvut.tjv_backend.dto.user.UserDto;
-import cz.cvut.tjv_backend.request.ChangePassword;
-import cz.cvut.tjv_backend.request.UpdateEmail;
-import cz.cvut.tjv_backend.request.UpdateUsername;
+import cz.cvut.tjv_backend.request.ChangePasswordRequest;
+import cz.cvut.tjv_backend.request.UpdateEmailRequest;
 import cz.cvut.tjv_backend.service.UserService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -16,16 +17,10 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/users")
 @AllArgsConstructor
+@Validated
 public class UserController {
 
     private final UserService userService;
-
-    // Create a new User
-    @PostMapping
-    public ResponseEntity<UserDto> createUser(@RequestBody UserCreateDto user) {
-        UserDto createdUser = userService.createUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
-    }
 
     // Retrieve a User by ID
     @GetMapping("/{id}")
@@ -41,23 +36,16 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-    // Update a User's username
-    @PutMapping("/{id}/username")
-    public ResponseEntity<Void> updateUsername(@PathVariable UUID id, @RequestBody UpdateUsername username) {
-        userService.updateUsername(id, username.getUsername());
-        return ResponseEntity.noContent().build();
-    }
-
     // Update a User's email
     @PutMapping("/{id}/email")
-    public ResponseEntity<Void> updateEmail(@PathVariable UUID id, @RequestBody UpdateEmail email) {
+    public ResponseEntity<Void> updateEmail(@PathVariable UUID id,@Valid @RequestBody UpdateEmailRequest email) {
         userService.updateEmail(id, email.getEmail());
         return ResponseEntity.noContent().build();
     }
 
     // Update a User's password
     @PutMapping("/{id}/password")
-    public ResponseEntity<Void> updatePassword(@PathVariable UUID id, @RequestBody ChangePassword passwordHash) {
+    public ResponseEntity<Void> updatePassword(@PathVariable UUID id,@Valid @RequestBody ChangePasswordRequest passwordHash) {
         userService.updatePassword(id, passwordHash.getPassword());
         return ResponseEntity.noContent().build();
     }
