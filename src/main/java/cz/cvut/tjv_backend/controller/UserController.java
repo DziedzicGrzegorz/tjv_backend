@@ -1,9 +1,9 @@
 package cz.cvut.tjv_backend.controller;
 
-import cz.cvut.tjv_backend.dto.user.UserCreateDto;
+import cz.cvut.tjv_backend.request.UserCreateRequest;
 import cz.cvut.tjv_backend.dto.user.UserDto;
-import cz.cvut.tjv_backend.request.ChangePassword;
-import cz.cvut.tjv_backend.request.UpdateEmail;
+import cz.cvut.tjv_backend.request.ChangePasswordRequest;
+import cz.cvut.tjv_backend.request.UpdateEmailRequest;
 import cz.cvut.tjv_backend.service.UserService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -22,13 +22,6 @@ public class UserController {
 
     private final UserService userService;
 
-    // Create a new User
-    @PostMapping
-    public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserCreateDto user) {
-        UserDto createdUser = userService.createUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
-    }
-
     // Retrieve a User by ID
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> getUserById(@PathVariable UUID id) {
@@ -45,14 +38,14 @@ public class UserController {
 
     // Update a User's email
     @PutMapping("/{id}/email")
-    public ResponseEntity<Void> updateEmail(@PathVariable UUID id,@Valid @RequestBody UpdateEmail email) {
+    public ResponseEntity<Void> updateEmail(@PathVariable UUID id,@Valid @RequestBody UpdateEmailRequest email) {
         userService.updateEmail(id, email.getEmail());
         return ResponseEntity.noContent().build();
     }
 
     // Update a User's password
     @PutMapping("/{id}/password")
-    public ResponseEntity<Void> updatePassword(@PathVariable UUID id,@Valid @RequestBody ChangePassword passwordHash) {
+    public ResponseEntity<Void> updatePassword(@PathVariable UUID id,@Valid @RequestBody ChangePasswordRequest passwordHash) {
         userService.updatePassword(id, passwordHash.getPassword());
         return ResponseEntity.noContent().build();
     }

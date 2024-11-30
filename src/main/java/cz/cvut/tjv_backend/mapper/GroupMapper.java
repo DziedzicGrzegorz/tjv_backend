@@ -1,8 +1,8 @@
 package cz.cvut.tjv_backend.mapper;
 
-import cz.cvut.tjv_backend.dto.group.CreateGroupDto;
+import cz.cvut.tjv_backend.request.CreateGroupRequest;
 import cz.cvut.tjv_backend.dto.group.GroupDto;
-import cz.cvut.tjv_backend.dto.group.GroupUpdateDto;
+import cz.cvut.tjv_backend.request.GroupUpdateRequest;
 import cz.cvut.tjv_backend.entity.Group;
 import org.mapstruct.*;
 
@@ -10,7 +10,7 @@ import org.mapstruct.*;
 public interface GroupMapper {
     Group toEntity(GroupDto groupDto);
 
-    Group toEntityFromCreateGroupDto(CreateGroupDto createGroupDto);
+    Group toEntityFromCreateGroupDto(CreateGroupRequest createGroupRequest);
 
     GroupDto toDto(Group group);
 
@@ -18,10 +18,10 @@ public interface GroupMapper {
     Group partialUpdate(GroupDto groupDto, @MappingTarget Group group);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    Group partialUpdate(CreateGroupDto groupDto, @MappingTarget Group group);
+    Group partialUpdate(CreateGroupRequest groupDto, @MappingTarget Group group);
 
-    Group toEntity(GroupUpdateDto groupUpdateDto);
+    Group toEntity(GroupUpdateRequest groupUpdateRequest);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    Group partialUpdate(GroupUpdateDto groupUpdateDto, @MappingTarget Group group);
+    Group partialUpdate(GroupUpdateRequest groupUpdateRequest, @MappingTarget Group group);
 }

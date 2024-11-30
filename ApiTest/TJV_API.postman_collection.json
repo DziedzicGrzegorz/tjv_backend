@@ -10,24 +10,46 @@
 			"name": "user",
 			"item": [
 				{
-					"name": "Create a User",
+					"name": "Retrieve a User by Email",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test(\"User created successfully\", function () {",
-									"    pm.response.to.have.status(201);",
+									"pm.test(\"User retrieved successfully\", function () {",
+									"    pm.response.to.have.status(200);",
 									"    var jsonData = pm.response.json();",
+									"",
+									"    // Validate response structure",
 									"    pm.expect(jsonData).to.have.property('id');",
 									"    pm.expect(jsonData).to.have.property('username', pm.environment.get('username'));",
-									"    pm.expect(jsonData).to.have.property('email', pm.environment.get('userEmail'));",
+									"    pm.expect(jsonData).to.have.property('email', pm.environment.get('email'));",
+									"    pm.expect(jsonData).to.have.property('roles').that.is.an('array');",
 									"    pm.expect(jsonData).to.have.property('groupRoles').that.is.an('array');",
 									"    pm.expect(jsonData).to.have.property('sharedFiles').that.is.an('array');",
 									"",
-									"        pm.environment.set('userId', jsonData.id);",
-									"});",
-									""
+									"    // Save all data to environment variables",
+									"    pm.environment.set('userId', jsonData.id);",
+									"    pm.environment.set('username', jsonData.username);",
+									"    pm.environment.set('email', jsonData.email);",
+									"",
+									"    // Save roles as a stringified JSON array",
+									"    pm.environment.set('roles', JSON.stringify(jsonData.roles));",
+									"",
+									"    // Save groupRoles as a stringified JSON array",
+									"    pm.environment.set('groupRoles', JSON.stringify(jsonData.groupRoles));",
+									"",
+									"    // Save sharedFiles as a stringified JSON array",
+									"    pm.environment.set('sharedFiles', JSON.stringify(jsonData.sharedFiles));",
+									"",
+									"    console.log('User data saved to environment variables:');",
+									"    console.log('ID:', jsonData.id);",
+									"    console.log('Username:', jsonData.username);",
+									"    console.log('Email:', jsonData.email);",
+									"    console.log('Roles:', jsonData.roles);",
+									"    console.log('Group Roles:', jsonData.groupRoles);",
+									"    console.log('Shared Files:', jsonData.sharedFiles);",
+									"});"
 								],
 								"type": "text/javascript",
 								"packages": {}
@@ -37,10 +59,6 @@
 							"listen": "prerequest",
 							"script": {
 								"exec": [
-									"pm.environment.set('userId', pm.variables.replaceIn('{{$guid}}'));",
-									"pm.environment.set('username', pm.variables.replaceIn('{{$randomUserName}}'));",
-									"pm.environment.set('userEmail', pm.variables.replaceIn('{{$randomEmail}}'));",
-									"pm.environment.set('userPassword', pm.variables.replaceIn('{{$randomPassword}}'));",
 									""
 								],
 								"type": "text/javascript",
@@ -49,40 +67,20 @@
 						}
 					],
 					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"username\": \"{{username}}\",\n  \"email\": \"{{userEmail}}\",\n  \"passwordHash\": \"{{userPassword}}\"\n}"
-						},
-						"url": {
-							"raw": "http://localhost:8080/api/v1/users",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"api",
-								"v1",
-								"users"
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
 							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Retrieve a User by Email",
-					"request": {
+						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:8080/api/v1/users/{{userId}}",
+							"raw": "http://localhost:8080/api/v1/users/email/{{email}}",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -92,7 +90,8 @@
 								"api",
 								"v1",
 								"users",
-								"{{userId}}"
+								"email",
+								"{{email}}"
 							]
 						}
 					},
@@ -100,35 +99,21 @@
 				},
 				{
 					"name": "Retrieve a User by ID",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://localhost:8080/api/v1/users/{{userId}}",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"api",
-								"v1",
-								"users",
-								"{{userId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Update User's Username",
 					"event": [
 						{
-							"listen": "prerequest",
+							"listen": "test",
 							"script": {
 								"exec": [
-									"var newUsername = pm.environment.get(\"username\") + \"1\"",
-									"pm.environment.set('username', pm.variables.replaceIn(newUsername));"
+									"pm.test(\"User retieved successfully\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('username', pm.environment.get('username'));",
+									"    pm.expect(jsonData).to.have.property('email', pm.environment.get('email'));",
+									"    pm.expect(jsonData).to.have.property('groupRoles').that.is.an('array');",
+									"    pm.expect(jsonData).to.have.property('sharedFiles').that.is.an('array');",
+									"});",
+									""
 								],
 								"type": "text/javascript",
 								"packages": {}
@@ -136,22 +121,18 @@
 						}
 					],
 					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"username\":\"{{username}}\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
 								}
-							}
+							]
 						},
+						"method": "GET",
+						"header": [],
 						"url": {
 							"raw": "http://localhost:8080/api/v1/users/{{userId}}",
 							"protocol": "http",
@@ -173,13 +154,13 @@
 					"name": "Update User's Email",
 					"event": [
 						{
-							"listen": "prerequest",
+							"listen": "test",
 							"script": {
 								"exec": [
 									"",
-									"pm.environment.set('userEmail', pm.variables.replaceIn('{{$randomEmail}}'));",
-									"",
-									"",
+									"pm.test(\"User updated successfully\", function () {",
+									"  pm.response.to.have.status(204);",
+									"});",
 									""
 								],
 								"type": "text/javascript",
@@ -187,13 +168,13 @@
 							}
 						},
 						{
-							"listen": "test",
+							"listen": "prerequest",
 							"script": {
 								"exec": [
-									"pm.test(\"User retieved successfully\", function () {",
-									"    pm.response.to.have.status(204);",
 									"",
-									"});",
+									"pm.environment.set('email', pm.variables.replaceIn('{{$randomEmail}}'));",
+									"",
+									"",
 									""
 								],
 								"type": "text/javascript",
@@ -202,6 +183,16 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJ0b2tlblR5cGUiOiJBQ0NFU1MiLCJ1c2VybmFtZSI6ImExZGExMjM1Iiwic3ViIjoiYTFkYTEyMzUiLCJpYXQiOjE3MzI5NzQ0OTYsImV4cCI6MTczMzAzNDQ5NiwiYXV0aG9yaXRpZXMiOlsiVVNFUiJdfQ.1sp6LnabNdF1GnVGKpLXdORUrs10pq71x22fu1Tvdzpg_mjWh3mTlusY7m-XgScU8YVscV81oNZ5K222iXHmHA",
+									"type": "string"
+								}
+							]
+						},
 						"method": "PUT",
 						"header": [
 							{
@@ -211,7 +202,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"email\":\"{{userEmail}}\"\n}",
+							"raw": "{\n    \"email\":\"{{email}}\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -243,7 +234,7 @@
 							"listen": "prerequest",
 							"script": {
 								"exec": [
-									"pm.environment.set('userPassword', pm.variables.replaceIn('{{$randomPassword}}'))"
+									"pm.environment.set('password', pm.variables.replaceIn('{{$randomPassword}}'))"
 								],
 								"type": "text/javascript",
 								"packages": {}
@@ -263,6 +254,16 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "PUT",
 						"header": [
 							{
@@ -272,7 +273,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"password\":\"{{userPassword}}\"\n}",
+							"raw": "{\n    \"password\":{{password}}\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -299,7 +300,31 @@
 				},
 				{
 					"name": "Delete a User by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"User updated successfully\", function () {",
+									"  pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "DELETE",
 						"header": [],
 						"url": {
@@ -393,6 +418,16 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJ0b2tlblR5cGUiOiJBQ0NFU1MiLCJ1c2VybmFtZSI6ImFzZGExMiIsInN1YiI6ImFzZGExMiIsImlhdCI6MTczMjgzMTE3OSwiZXhwIjoxNzMyODMyMTc5LCJhdXRob3JpdGllcyI6WyJVU0VSIl19.MyY-KFR7iIv6qp3SNzMITucdty7P-Ww1PLLxOX9RtcCW7L7IQzKz1dJ1G5bI3-arm1u7FhVkh0FOgTKVIzK2vQ",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [
 							{
@@ -507,7 +542,7 @@
 									"    pm.expect(jsonData).to.have.property('id', pm.environment.get('fileId'));",
 									"    pm.expect(jsonData).to.have.nested.property('owner.id', pm.environment.get('userId'));",
 									"    pm.expect(jsonData).to.have.nested.property('owner.username', pm.environment.get('username'));",
-									"    pm.expect(jsonData).to.have.nested.property('owner.email', pm.environment.get('userEmail'));",
+									"    pm.expect(jsonData).to.have.nested.property('owner.email', pm.environment.get('email'));",
 									"    pm.expect(jsonData).to.have.property('filename', 'test_update.txt');",
 									"    pm.expect(jsonData).to.have.property('fileType', pm.environment.get('fileType'));",
 									"    pm.expect(jsonData).to.have.property('size', pm.environment.get('fileSize'));",
@@ -538,6 +573,16 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "PUT",
 						"header": [
 							{
@@ -650,7 +695,7 @@
 									"        pm.expect(file).to.have.property('id').that.is.a('string');",
 									"        pm.expect(file).to.have.nested.property('owner.id', pm.environment.get('userId'));",
 									"        pm.expect(file).to.have.nested.property('owner.username', pm.environment.get('username'));",
-									"        pm.expect(file).to.have.nested.property('owner.email', pm.environment.get('userEmail'));",
+									"        pm.expect(file).to.have.nested.property('owner.email', pm.environment.get('email'));",
 									"",
 									"        pm.expect(file).to.have.property('filename').that.is.a('string');",
 									"        pm.expect(file).to.have.property('fileType').that.is.a('string');",
@@ -668,6 +713,16 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
 						"header": [],
 						"url": {
@@ -709,7 +764,7 @@
 									"        pm.expect(file).to.have.property('id').that.is.a('string');",
 									"        pm.expect(file).to.have.nested.property('owner.id', pm.environment.get('userId'));",
 									"        pm.expect(file).to.have.nested.property('owner.username', pm.environment.get('username'));",
-									"        pm.expect(file).to.have.nested.property('owner.email', pm.environment.get('userEmail'));",
+									"        pm.expect(file).to.have.nested.property('owner.email', pm.environment.get('email'));",
 									"",
 									"        pm.expect(file).to.have.property('filename').that.is.a('string');",
 									"        pm.expect(file).to.have.property('fileType').that.is.a('string');",
@@ -727,6 +782,16 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
 						"header": [],
 						"url": {
@@ -769,7 +834,7 @@
 									"        pm.expect(file).to.have.property('id').that.is.a('string');",
 									"        pm.expect(file).to.have.nested.property('owner.id', pm.environment.get('userId'));",
 									"        pm.expect(file).to.have.nested.property('owner.username', pm.environment.get('username'));",
-									"        pm.expect(file).to.have.nested.property('owner.email', pm.environment.get('userEmail'));",
+									"        pm.expect(file).to.have.nested.property('owner.email', pm.environment.get('email'));",
 									"",
 									"        pm.expect(file).to.have.property('filename').that.is.a('string');",
 									"        pm.expect(file).to.have.property('fileType').that.is.a('string');",
@@ -787,6 +852,16 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
 						"header": [],
 						"url": {
@@ -846,6 +921,16 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "DELETE",
 						"header": [
 							{
@@ -930,6 +1015,16 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [
 							{
@@ -1279,6 +1374,16 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -1757,6 +1862,374 @@
 								"shared-files",
 								"group",
 								"{{groupId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "health",
+			"item": [
+				{
+					"name": "New Request",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJOb3RjOXdhUjdrQnJMZ2VtNVhtQXFsR2pKRVhBNnd0bi1wRElkUFFDN2swIn0.eyJleHAiOjE3MzI0NTA5MzksImlhdCI6MTczMjQ1MDYzOSwianRpIjoiMjI4YmY1MmEtZmVlMS00ZjY4LWE5OGYtZWNhODY0OGRjYWU1IiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo5MDkwL3JlYWxtcy90anYiLCJhdWQiOiJhY2NvdW50Iiwic3ViIjoiYjliMTU5ZjktM2I2Mi00Njc2LTg2YzctMmY5ZDIyOWMwNjhlIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoidGp2X3Jlc3RfYXBpIiwic2lkIjoiYTZmNThjNzItMDA0Zi00YzRiLThjOGUtNTg0Mjg2NzhmYWRjIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIiwiZGVmYXVsdC1yb2xlcy10anYiXX0sInJlc291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6InByb2ZpbGUgZW1haWwiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkFTREFTREFTRCBBU0RBU0RBU0QiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJ0ZXN0dGVzdDEyMyIsImdpdmVuX25hbWUiOiJBU0RBU0RBU0QiLCJmYW1pbHlfbmFtZSI6IkFTREFTREFTRCIsImVtYWlsIjoiZ3J6ZWdvcnpkemllZHppYzE5OEBnbWFpbC5jb20ifQ.XA-nfi3ikyVRylWprRWBBoAxenwtuHYT-w-VeEeXlOAqrB2pKGPxiN06yczTOdcLrKNkuXDS8qJEKLXy6-ORge1_trGklge0zpPktzjh1dk6g9sTq1B48UzJV6W49BZ3dw1HgXPF2X4VZ1MIp4WRy5TVg1Xey3i8MN4Sc0u7CETf0OWa4JYcwuswo1HaCFvzPV6mJAFgNjdnGv2rTbPAtnFtHafczJR9giIDNxG1t2scMz4olaA4H4vnlsukMHNoVcLcagK7kqJpi3ni0pLU5qpJzb-p7HZQ6IJu_n-YLeCGJ1iLq-jXTkOkkyTG2b8h1px9AhhAOF17LwwhQ_Cw7g",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/v1/test",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"test"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:9090/realms/tjv/protocol/openid-connect/token",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "grant_type",
+									"value": "password",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "tjv_rest_api",
+									"type": "text"
+								},
+								{
+									"key": "username",
+									"value": "testtest123",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "testtest123",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:9090/realms/tjv/protocol/openid-connect/token",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"realms",
+								"tjv",
+								"protocol",
+								"openid-connect",
+								"token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:9090/realms/tjv/protocol/openid-connect/token Copy",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9090/realms/tjv/clients-registrations/openid-connect",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9090",
+							"path": [
+								"realms",
+								"tjv",
+								"clients-registrations",
+								"openid-connect"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "auth",
+			"item": [
+				{
+					"name": "register",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Generate dynamic username",
+									"var username = 'user_' + Math.random().toString(36).substring(7);",
+									"pm.environment.set('username', username);",
+									"",
+									"// Generate dynamic email",
+									"var email = username + '@example.com';",
+									"pm.environment.set('email', email);",
+									"",
+									"// Set static password",
+									"var password = 'SecurePassword123!';",
+									"pm.environment.set('password', password);",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Registration was successful\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    ",
+									"",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"{{username}}\",\n    \"email\": \"{{email}}\",\n    \"password\": \"{{password}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/auth/register",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Set login credentials (replace these with actual values or generate dynamically)",
+									"pm.environment.set('username', pm.environment.get('username') || 'user_331st5');",
+									"pm.environment.set('password', pm.environment.get('password') || 'SecurePassword123!');",
+									"",
+									"console.log('Login credentials set:');",
+									"console.log('Username:', pm.environment.get('username'));",
+									"console.log('Password:', pm.environment.get('password'));"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Login was successful\", function () {",
+									"    pm.response.to.have.status(200); // Ensure the login endpoint responds with HTTP 200",
+									"",
+									"    var jsonData = pm.response.json(); // Parse the response JSON",
+									"",
+									"    // Check if the access and refresh tokens are present",
+									"    pm.expect(jsonData).to.have.property('accessToken');",
+									"    pm.expect(jsonData).to.have.property('refreshToken');",
+									"",
+									"    // Save tokens to environment variables",
+									"    pm.environment.set('accessToken', jsonData.accessToken);",
+									"    pm.environment.set('refreshToken', jsonData.refreshToken);",
+									"",
+									"    console.log('Tokens saved to environment variables:');",
+									"    console.log('Access Token:', jsonData.accessToken);",
+									"    console.log('Refresh Token:', jsonData.refreshToken);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"{{username}}\",\n    \"password\": \"{{password}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/auth/authenticate",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"authenticate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Ensure the refreshToken exists in environment variables",
+									"if (!pm.environment.get('refreshToken')) {",
+									"    throw new Error('No refresh token found in environment variables. Please log in first.');",
+									"}",
+									"",
+									"console.log('Using refresh token:', pm.environment.get('refreshToken'));"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Refresh token request was successful\", function () {",
+									"    pm.response.to.have.status(200); // Ensure the refresh endpoint responds with HTTP 200",
+									"",
+									"    var jsonData = pm.response.json(); // Parse the response JSON",
+									"",
+									"    // Validate presence of access and refresh tokens",
+									"    pm.expect(jsonData).to.have.property('accessToken');",
+									"    pm.expect(jsonData).to.have.property('refreshToken');",
+									"",
+									"    // Save the new tokens into environment variables",
+									"    pm.environment.set('accessToken', jsonData.accessToken);",
+									"    pm.environment.set('refreshToken', jsonData.refreshToken);",
+									"",
+									"    console.log('New tokens saved to environment variables:');",
+									"    console.log('Access Token:', jsonData.accessToken);",
+									"    console.log('Refresh Token:', jsonData.refreshToken);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refreshToken\": \"{{refreshToken}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/auth/refresh",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "New Request",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJ1c2VybmFtZSI6ImFzZCIsInN1YiI6ImFzZCIsImlhdCI6MTczMjQ4NDE0MSwiZXhwIjo1NzMyNTcwNTQxLCJhdXRob3JpdGllcyI6WyJVU0VSIl19.vm2w_RLRp5rlXkttZgKZq7jmUQzjNnu9zzoGnSzOZnuxuj0PIn1bOyyE1SkLKvDW18dq8oA2GUY7fQYMgpltnB",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/v1/test",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"test"
 							]
 						}
 					},

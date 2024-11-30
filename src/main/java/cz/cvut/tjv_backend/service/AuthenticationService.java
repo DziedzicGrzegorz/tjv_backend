@@ -1,13 +1,11 @@
 package cz.cvut.tjv_backend.service;
 
 import cz.cvut.tjv_backend.authConfig.TOKEN_TYPE;
-import cz.cvut.tjv_backend.dto.user.UserCreateDto;
+import cz.cvut.tjv_backend.request.UserCreateRequest;
 import cz.cvut.tjv_backend.entity.User;
-import cz.cvut.tjv_backend.exception.Exceptions.InvalidRefreshTokenException;
 import cz.cvut.tjv_backend.request.auth.AuthenticationRequest;
 import cz.cvut.tjv_backend.request.auth.AuthenticationResponse;
 import cz.cvut.tjv_backend.request.auth.TokenRefreshRequest;
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,7 +24,7 @@ public class AuthenticationService {
     private final UserService userService;
     private final String USERNAME = "username";
 
-    public void register(UserCreateDto request) {
+    public void register(UserCreateRequest request) {
         userService.createUser(request);
     }
 

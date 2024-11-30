@@ -1,6 +1,6 @@
 package cz.cvut.tjv_backend.service;
 
-import cz.cvut.tjv_backend.dto.user.UserCreateDto;
+import cz.cvut.tjv_backend.request.UserCreateRequest;
 import cz.cvut.tjv_backend.dto.user.UserDto;
 import cz.cvut.tjv_backend.entity.User;
 import cz.cvut.tjv_backend.exception.Exceptions.NotFoundException;
@@ -32,13 +32,13 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
-    public UserDto createUser(UserCreateDto userCreateDtoRequest) {
-        validateEmailUniqueness(userCreateDtoRequest.getEmail());
-        validateUsernameUniqueness(userCreateDtoRequest.getUsername());
-        String passwordHash = passwordEncoder.encode(userCreateDtoRequest.getPassword());
+    public UserDto createUser(UserCreateRequest userCreateRequestRequest) {
+        validateEmailUniqueness(userCreateRequestRequest.getEmail());
+        validateUsernameUniqueness(userCreateRequestRequest.getUsername());
+        String passwordHash = passwordEncoder.encode(userCreateRequestRequest.getPassword());
 
-        UserCreateDto userCreateDto = new UserCreateDto(userCreateDtoRequest.getUsername(), userCreateDtoRequest.getEmail(), passwordHash);
-        User user = userMapper.toEntity(userCreateDto);
+        UserCreateRequest userCreateRequest = new UserCreateRequest(userCreateRequestRequest.getUsername(), userCreateRequestRequest.getEmail(), passwordHash);
+        User user = userMapper.toEntity(userCreateRequest);
         User savedUser = userRepository.save(user);
         return userMapper.toDto(savedUser);
     }
@@ -61,7 +61,8 @@ public class UserService implements UserDetailsService {
 
     public void updatePassword(UUID userId, String passwordHash) {
         ensureUserExists(userId);
-        userRepository.updatePasswordById(userId, passwordHash);
+        String encodedPassword = passwordEncoder.encode(passwordHash);
+        userRepository.updatePasswordById(userId, encodedPassword);
     }
 
     public void deleteUserById(UUID userId) {

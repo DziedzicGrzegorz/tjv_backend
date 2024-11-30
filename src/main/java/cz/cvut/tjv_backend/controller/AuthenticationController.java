@@ -1,6 +1,6 @@
 package cz.cvut.tjv_backend.controller;
 
-import cz.cvut.tjv_backend.dto.user.UserCreateDto;
+import cz.cvut.tjv_backend.request.UserCreateRequest;
 import cz.cvut.tjv_backend.request.auth.AuthenticationRequest;
 import cz.cvut.tjv_backend.request.auth.AuthenticationResponse;
 import cz.cvut.tjv_backend.request.auth.TokenRefreshRequest;
@@ -22,7 +22,7 @@ public class AuthenticationController {
     private final AuthenticationService service;
 
     @PostMapping("/register")
-    public ResponseEntity<Void> register(@Valid @RequestBody UserCreateDto request) {
+    public ResponseEntity<Void> register(@Valid @RequestBody UserCreateRequest request) {
         service.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }

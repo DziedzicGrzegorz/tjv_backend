@@ -1,6 +1,6 @@
 package cz.cvut.tjv_backend.mapper;
 
-import cz.cvut.tjv_backend.dto.user.UserCreateDto;
+import cz.cvut.tjv_backend.request.UserCreateRequest;
 import cz.cvut.tjv_backend.dto.user.UserDto;
 import cz.cvut.tjv_backend.dto.user.UserShortDto;
 import cz.cvut.tjv_backend.entity.User;
@@ -17,10 +17,10 @@ public interface UserMapper {
 
     // UserRole to user by default
     @Mapping(target = "roles", expression = "java(java.util.List.of(UserRole.USER))")
-    User toEntity(UserCreateDto userCreateDto);
+    User toEntity(UserCreateRequest userCreateRequest);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    User partialUpdate(UserCreateDto userCreateDto, @MappingTarget User user);
+    User partialUpdate(UserCreateRequest userCreateRequest, @MappingTarget User user);
 
     User toEntity(UserShortDto userShortDto);
 

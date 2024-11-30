@@ -1,8 +1,8 @@
 package cz.cvut.tjv_backend.controller;
 
-import cz.cvut.tjv_backend.dto.group.CreateGroupDto;
+import cz.cvut.tjv_backend.request.CreateGroupRequest;
 import cz.cvut.tjv_backend.dto.group.GroupDto;
-import cz.cvut.tjv_backend.dto.group.GroupUpdateDto;
+import cz.cvut.tjv_backend.request.GroupUpdateRequest;
 import cz.cvut.tjv_backend.service.GroupService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -23,7 +23,7 @@ public class GroupController {
 
     // Create a new Group
     @PostMapping
-    public ResponseEntity<GroupDto> createGroup(@Valid @RequestBody CreateGroupDto createGroup) {
+    public ResponseEntity<GroupDto> createGroup(@Valid @RequestBody CreateGroupRequest createGroup) {
         GroupDto createdGroup = groupService.createGroup(createGroup);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdGroup);
     }
@@ -38,7 +38,7 @@ public class GroupController {
 
     // Update a Group
     @PutMapping("/")
-    public ResponseEntity<GroupDto> updateGroup(@Valid @RequestBody GroupUpdateDto updatedGroup) {
+    public ResponseEntity<GroupDto> updateGroup(@Valid @RequestBody GroupUpdateRequest updatedGroup) {
         GroupDto group = groupService.updateGroup(updatedGroup);
         return ResponseEntity.ok(group);
     }

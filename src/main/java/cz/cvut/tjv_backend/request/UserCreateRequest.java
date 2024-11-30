@@ -1,4 +1,4 @@
-package cz.cvut.tjv_backend.dto.user;
+package cz.cvut.tjv_backend.request;
 
 import cz.cvut.tjv_backend.entity.User;
 import jakarta.validation.constraints.*;
@@ -10,7 +10,7 @@ import java.io.Serializable;
  * DTO for {@link User}
  */
 @Value
-public class UserCreateDto implements Serializable {
+public class UserCreateRequest implements Serializable {
     @NotBlank(message = "Username is mandatory")
     @Size(min = 7, max = 50, message = "Username must be between 3 and 50 characters")
     String username;
