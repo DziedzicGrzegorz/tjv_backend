@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.util.UUID;
 
 /**
  * DTO for {@link cz.cvut.tjv_backend.entity.UserGroupRole}
@@ -15,6 +14,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CreateUserGroupRoleDto implements Serializable {
-    private UUID id;
+    private String id;
+
     private Role role;
 }

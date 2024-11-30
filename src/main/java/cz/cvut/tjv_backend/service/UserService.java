@@ -37,7 +37,7 @@ public class UserService implements UserDetailsService {
         validateUsernameUniqueness(userCreateDtoRequest.getUsername());
         String passwordHash = passwordEncoder.encode(userCreateDtoRequest.getPassword());
 
-        UserCreateDto userCreateDto = new UserCreateDto(UUID.randomUUID(), userCreateDtoRequest.getUsername(), userCreateDtoRequest.getEmail(), passwordHash);
+        UserCreateDto userCreateDto = new UserCreateDto(userCreateDtoRequest.getUsername(), userCreateDtoRequest.getEmail(), passwordHash);
         User user = userMapper.toEntity(userCreateDto);
         User savedUser = userRepository.save(user);
         return userMapper.toDto(savedUser);

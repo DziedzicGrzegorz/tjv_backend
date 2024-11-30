@@ -22,21 +22,21 @@ public class AuthenticationController {
     private final AuthenticationService service;
 
     @PostMapping("/register")
-    public ResponseEntity<Void> register(@RequestBody @Valid UserCreateDto request) {
+    public ResponseEntity<Void> register(@Valid @RequestBody UserCreateDto request) {
         service.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/authenticate")
     public ResponseEntity<AuthenticationResponse> authenticate(
-            @RequestBody AuthenticationRequest request
+            @Valid @RequestBody AuthenticationRequest request
     ) {
         return ResponseEntity.ok(service.authenticate(request));
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<AuthenticationResponse> refreshToken(
-            @RequestBody @Valid TokenRefreshRequest request
+            @Valid @RequestBody TokenRefreshRequest request
     ) {
         AuthenticationResponse response = service.refreshToken(request);
         return ResponseEntity.ok(response);

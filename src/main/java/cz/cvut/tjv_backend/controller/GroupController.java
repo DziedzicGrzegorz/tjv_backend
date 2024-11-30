@@ -4,6 +4,7 @@ import cz.cvut.tjv_backend.dto.group.CreateGroupDto;
 import cz.cvut.tjv_backend.dto.group.GroupDto;
 import cz.cvut.tjv_backend.dto.group.GroupUpdateDto;
 import cz.cvut.tjv_backend.service.GroupService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,7 @@ public class GroupController {
 
     // Create a new Group
     @PostMapping
-    public ResponseEntity<GroupDto> createGroup(@RequestBody CreateGroupDto createGroup) {
+    public ResponseEntity<GroupDto> createGroup(@Valid @RequestBody CreateGroupDto createGroup) {
         GroupDto createdGroup = groupService.createGroup(createGroup);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdGroup);
     }
@@ -37,7 +38,7 @@ public class GroupController {
 
     // Update a Group
     @PutMapping("/")
-    public ResponseEntity<GroupDto> updateGroup(@RequestBody GroupUpdateDto updatedGroup) {
+    public ResponseEntity<GroupDto> updateGroup(@Valid @RequestBody GroupUpdateDto updatedGroup) {
         GroupDto group = groupService.updateGroup(updatedGroup);
         return ResponseEntity.ok(group);
     }
@@ -51,14 +52,14 @@ public class GroupController {
 
     // Add Users to Group
     @PostMapping("/{groupId}/add-users")
-    public ResponseEntity<GroupDto> addUsersToGroup(@PathVariable UUID groupId, @RequestBody List<UUID> userIds) {
+    public ResponseEntity<GroupDto> addUsersToGroup(@PathVariable UUID groupId, @Valid @RequestBody List<UUID> userIds) {
         GroupDto group = groupService.addUsersToGroup(groupId, userIds);
         return ResponseEntity.ok(group);
     }
 
     // Remove Users from Group
     @DeleteMapping("/{groupId}/remove-users")
-    public ResponseEntity<GroupDto> removeUsersFromGroup(@PathVariable UUID groupId, @RequestBody Set<UUID> userIds) {
+    public ResponseEntity<GroupDto> removeUsersFromGroup(@PathVariable UUID groupId, @Valid @RequestBody Set<UUID> userIds) {
         GroupDto group = groupService.removeUsersFromGroup(groupId, userIds);
         return ResponseEntity.ok(group);
     }
