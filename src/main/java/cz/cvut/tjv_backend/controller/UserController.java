@@ -4,7 +4,6 @@ import cz.cvut.tjv_backend.dto.user.UserCreateDto;
 import cz.cvut.tjv_backend.dto.user.UserDto;
 import cz.cvut.tjv_backend.request.ChangePassword;
 import cz.cvut.tjv_backend.request.UpdateEmail;
-import cz.cvut.tjv_backend.request.UpdateUsername;
 import cz.cvut.tjv_backend.service.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -39,13 +38,6 @@ public class UserController {
     public ResponseEntity<UserDto> getUserByEmail(@PathVariable String email) {
         UserDto user = userService.getUserByEmail(email);
         return ResponseEntity.ok(user);
-    }
-
-    // Update a User's username
-    @PutMapping("/{id}/username")
-    public ResponseEntity<Void> updateUsername(@PathVariable UUID id, @RequestBody UpdateUsername username) {
-        userService.updateUsername(id, username.getUsername());
-        return ResponseEntity.noContent().build();
     }
 
     // Update a User's email

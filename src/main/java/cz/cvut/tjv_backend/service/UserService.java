@@ -53,11 +53,6 @@ public class UserService implements UserDetailsService {
         return userMapper.toDto(user);
     }
 
-    public void updateUsername(UUID userId, String username) {
-        ensureUserExists(userId);
-        userRepository.updateUsernameById(userId, username);
-    }
-
     public void updateEmail(UUID userId, String email) {
         validateEmailUniqueness(email);
         ensureUserExists(userId);
