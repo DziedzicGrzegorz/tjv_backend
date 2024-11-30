@@ -1,6 +1,8 @@
 package cz.cvut.tjv_backend.authConfig;
 
-import cz.cvut.tjv_backend.exception.Exceptions;
+import cz.cvut.tjv_backend.exception.Exceptions.AccessTokenExpiredException;
+import cz.cvut.tjv_backend.exception.Exceptions.InvalidAccessTokenException;
+import cz.cvut.tjv_backend.exception.Exceptions.MissingAccessToken;
 import cz.cvut.tjv_backend.service.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -43,7 +45,7 @@ public class JwtFilter extends OncePerRequestFilter {
             String jwt = parseJwt(request);
 
             if (jwt == null) {
-                throw new JwtException("Missing or invalid Authorization header");
+                throw new MissingAccessToken("Missing or invalid Authorization header");
             }
 
             // Validate token and extract claims
@@ -61,13 +63,19 @@ public class JwtFilter extends OncePerRequestFilter {
 
         } catch (ExpiredJwtException e) {
             handlerExceptionResolver.resolveException(
-                    request, response, null, new Exceptions.AccessTokenExpiredException("Access token expired")
+                    request, response, null, new AccessTokenExpiredException("Access token expired")
+            );
+            return;
+
+        } catch (MissingAccessToken e) {
+            handlerExceptionResolver.resolveException(
+                    request, response, null, new MissingAccessToken("Missing Authorization header")
             );
             return;
 
         } catch (JwtException e) {
             handlerExceptionResolver.resolveException(
-                    request, response, null, new Exceptions.InvalidAccessTokenException("Invalid token")
+                    request, response, null, new InvalidAccessTokenException("Invalid token")
             );
             return;
         }
