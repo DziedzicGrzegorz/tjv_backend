@@ -52,6 +52,16 @@ public class SharedFileController {
         SharedFileWithGroupDto createdSharedFile = sharedFileService.shareFileWithGroup(sharedFileWithGroup);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdSharedFile);
     }
+    @GetMapping("/user")
+    @Operation(summary = "Get files shared with a user", description = "Retrieves all files shared with a specific user.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Files retrieved successfully", content = @Content(schema = @Schema(implementation = SharedFileWithUserDto[].class))),
+            @ApiResponse(responseCode = "404", description = "User not found", content = @Content)
+    })
+    public ResponseEntity<List<SharedFileWithUserDto>> getSharedFileWithUserByCurrentUser() {
+        List<SharedFileWithUserDto> sharedFileWithUser = sharedFileService.getSharedFilesWithCurrentUser();
+        return ResponseEntity.ok(sharedFileWithUser);
+    }
 
     @GetMapping("/user/{id}")
     @Operation(summary = "Get files shared with a user", description = "Retrieves all files shared with a specific user.")

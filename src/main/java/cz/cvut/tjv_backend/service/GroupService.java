@@ -29,6 +29,7 @@ public class GroupService {
     private final UserRepository userRepository;
     private final UserGroupRoleRepository userGroupRoleRepository;
     private final GroupMapper groupMapper;
+    private final UserService userService;
 
     @Transactional
     public GroupDto createGroup(CreateGroupRequest createGroupRequest) {
@@ -113,8 +114,17 @@ public class GroupService {
         Group group = getGroupByIdEntity(groupId);
         return groupMapper.toDto(group);
     }
+    public GroupDto getGroupByName(String groupName) {
+        Group group = getGroupByGroupName(groupName);
+        return groupMapper.toDto(group);
+    }
 
     public List<GroupDto> getAllGroupsByUser(UUID userId) {
+        List<Group> groups = groupRepository.findAllByUserUserId(userId);
+        return groups.stream().map(groupMapper::toDto).collect(Collectors.toList());
+    }
+    public List<GroupDto> getAllGroupsByCurrentUser() {
+        UUID userId = userService.getCurrentUser().getId();
         List<Group> groups = groupRepository.findAllByUserUserId(userId);
         return groups.stream().map(groupMapper::toDto).collect(Collectors.toList());
     }
@@ -140,6 +150,10 @@ public class GroupService {
     private Group getGroupByIdEntity(UUID groupId) {
         return groupRepository.findById(groupId)
                 .orElseThrow(() -> new NotFoundException("Group not found with ID: " + groupId));
+    }
+    private Group getGroupByGroupName(String groupName) {
+        return groupRepository.findByName(groupName)
+                .orElseThrow(() -> new NotFoundException("Group not found with Name: " + groupName));
     }
 
     private List<User> getUsersByIds(Collection<UUID> userIds) {

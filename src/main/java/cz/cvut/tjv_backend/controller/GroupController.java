@@ -54,6 +54,18 @@ public class GroupController {
         GroupDto groupDetails = groupService.getGroupById(groupId);
         return ResponseEntity.ok(groupDetails);
     }
+    @GetMapping("/name/{groupName}")
+    @Operation(summary = "Retrieve a group by name", description = "Fetches the details of a group using its name.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Group retrieved successfully", content = @Content(schema = @Schema(implementation = GroupDto.class))),
+            @ApiResponse(responseCode = "404", description = "Group not found", content = @Content)
+    })
+    public ResponseEntity<GroupDto> getGroupByName(
+            @PathVariable @Parameter(description = "Name of the group to retrieve") String groupName
+    ) {
+        GroupDto groupDetails = groupService.getGroupByName(groupName);
+        return ResponseEntity.ok(groupDetails);
+    }
 
     @PutMapping
     @Operation(summary = "Update a group", description = "Updates the details of an existing group.")
@@ -120,6 +132,16 @@ public class GroupController {
         @PathVariable @Parameter(description = "Unique ID of the user") UUID userId
     ) {
         List<GroupDto> userGroups = groupService.getAllGroupsByUser(userId);
+        return ResponseEntity.ok(userGroups);
+    }
+    @GetMapping("/user")
+    @Operation(summary = "Retrieve all groups by user ID", description = "Fetches all groups associated with a specific user.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Groups retrieved successfully", content = @Content(schema = @Schema(implementation = GroupDto[].class))),
+            @ApiResponse(responseCode = "404", description = "User or groups not found", content = @Content)
+    })
+    public ResponseEntity<List<GroupDto>> getAllGroupsByCurrentUser() {
+        List<GroupDto> userGroups = groupService.getAllGroupsByCurrentUser();
         return ResponseEntity.ok(userGroups);
     }
 

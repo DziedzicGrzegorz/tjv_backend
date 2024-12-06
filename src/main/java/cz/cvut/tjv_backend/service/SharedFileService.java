@@ -2,6 +2,7 @@ package cz.cvut.tjv_backend.service;
 
 import cz.cvut.tjv_backend.dto.SharedFileWithGroupDto;
 import cz.cvut.tjv_backend.dto.SharedFileWithUserDto;
+import cz.cvut.tjv_backend.dto.user.UserDto;
 import cz.cvut.tjv_backend.entity.*;
 import cz.cvut.tjv_backend.exception.Exceptions.FileAlreadySharedException;
 import cz.cvut.tjv_backend.exception.Exceptions.NotFoundException;
@@ -32,6 +33,7 @@ public class SharedFileService {
     private final FileRepository fileRepository;
     private final UserRepository userRepository;
     private final GroupRepository groupRepository;
+    private final UserService userService;
 
     // Share a file with a user
     public SharedFileWithUserDto shareFileWithUser(FileSharingWithUserRequest request) {
@@ -118,6 +120,17 @@ public class SharedFileService {
 
     // Retrieve shared file with user by ID
     public List<SharedFileWithUserDto> getSharedFilesWithUser(UUID userId) {
+        List<SharedFileWithUser> sharedFiles = sharedFileWithUserRepository.findAllBySharedWithId(userId);
+        if (sharedFiles.isEmpty()) {
+            throw new NotFoundException("No files shared with user ID: " + userId);
+        }
+        return sharedFiles.stream()
+                .map(sharedFileWithUserMapper::toDto)
+                .collect(Collectors.toList());
+    }
+    public List<SharedFileWithUserDto> getSharedFilesWithCurrentUser() {
+        UserDto currentUser = userService.getCurrentUser();
+        UUID userId = currentUser.getId();
         List<SharedFileWithUser> sharedFiles = sharedFileWithUserRepository.findAllBySharedWithId(userId);
         if (sharedFiles.isEmpty()) {
             throw new NotFoundException("No files shared with user ID: " + userId);

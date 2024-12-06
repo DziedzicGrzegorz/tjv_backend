@@ -8,6 +8,7 @@ import cz.cvut.tjv_backend.exception.Exceptions.UserAlreadyExistsException;
 import cz.cvut.tjv_backend.mapper.UserMapper;
 import cz.cvut.tjv_backend.repository.UserRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -30,6 +31,18 @@ public class UserService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+    //getCurrentUser
+    public UserDto getCurrentUser() {
+        // Get the authenticated user's username from the SecurityContext
+        User userFromContext = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        // Fetch the user from the database
+        User user = userRepository.findByUsername(userFromContext.getUsername())
+                .orElseThrow(() -> new NotFoundException("Authenticated user not found"));
+
+        // Map the user entity to a DTO and return
+        return userMapper.toDto(user);
     }
 
     public UserDto createUser(UserCreateRequest userCreateRequestRequest) {

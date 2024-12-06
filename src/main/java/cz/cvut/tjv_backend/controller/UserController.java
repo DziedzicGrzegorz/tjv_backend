@@ -29,6 +29,18 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
+    //return current user
+    @GetMapping("/me")
+    @Operation(summary = "Retrieve current user", description = "Fetches details of the currently authenticated user.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "User retrieved successfully",
+                     content = @Content(schema = @Schema(implementation = UserDto.class))),
+        @ApiResponse(responseCode = "404", description = "User not found", content = @Content)
+    })
+    public ResponseEntity<UserDto> getCurrentUser() {
+        UserDto user = userService.getCurrentUser();
+        return ResponseEntity.ok(user);
+    }
 
     @GetMapping("/{id}")
     @Operation(summary = "Retrieve user by ID", description = "Fetches user details by their unique identifier.")
