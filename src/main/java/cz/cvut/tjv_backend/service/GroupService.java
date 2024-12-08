@@ -1,5 +1,7 @@
 package cz.cvut.tjv_backend.service;
 
+import cz.cvut.tjv_backend.dto.user.UserDto;
+import cz.cvut.tjv_backend.mapper.UserMapper;
 import cz.cvut.tjv_backend.request.CreateGroupRequest;
 import cz.cvut.tjv_backend.dto.group.GroupDto;
 import cz.cvut.tjv_backend.request.GroupUpdateRequest;
@@ -15,6 +17,9 @@ import cz.cvut.tjv_backend.repository.UserGroupRoleRepository;
 import cz.cvut.tjv_backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -29,6 +34,7 @@ public class GroupService {
     private final UserRepository userRepository;
     private final UserGroupRoleRepository userGroupRoleRepository;
     private final GroupMapper groupMapper;
+    private final UserMapper userMapper;
     private final UserService userService;
 
     @Transactional
@@ -54,7 +60,6 @@ public class GroupService {
 
     public GroupDto updateGroup(GroupUpdateRequest groupUpdateRequest) {
         Group existingGroup = getGroupByIdEntity(groupUpdateRequest.getId());
-
 
         Group updatedEntity = Group.builder()
                 .id(existingGroup.getId())
@@ -105,33 +110,58 @@ public class GroupService {
             }
             userGroupRoleRepository.deleteByUserIdAndGroupId(userId, groupId);
         }
-        Group NewGroup = groupRepository.findById(groupId)
+        Group newGroup = groupRepository.findById(groupId)
                 .orElseThrow(() -> new NotFoundException("Group not found"));
-        return groupMapper.toDto(NewGroup);
+        return groupMapper.toDto(newGroup);
+    }
+
+    // Method for paginated retrieval of all groups
+    public List<GroupDto> getAllGroups(int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by("name").ascending());
+        Page<Group> groupsPage = groupRepository.findAll(pageRequest);
+        return groupsPage.getContent().stream()
+                .map(groupMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    // Method to get groups by user with pagination
+    public List<GroupDto> getAllGroupsByUser(UUID userId, int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by("name").ascending());
+        Page<Group> groupsPage = groupRepository.findAllByUserUserId(userId, pageRequest);
+        return groupsPage.getContent().stream()
+                .map(groupMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    // Method to get users in a group with pagination
+    public List<UserDto> getUsersInGroup(UUID groupId, int page, int size) {
+        // Ensure group exists
+        getGroupByIdEntity(groupId);
+
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by("joinedAt").ascending());
+        Page<User> usersPage = userGroupRoleRepository.findUsersByGroupId(groupId, pageRequest);
+        return usersPage.getContent().stream()
+                .map(userMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     public GroupDto getGroupById(UUID groupId) {
         Group group = getGroupByIdEntity(groupId);
         return groupMapper.toDto(group);
     }
+
     public GroupDto getGroupByName(String groupName) {
         Group group = getGroupByGroupName(groupName);
         return groupMapper.toDto(group);
     }
 
-    public List<GroupDto> getAllGroupsByUser(UUID userId) {
-        List<Group> groups = groupRepository.findAllByUserUserId(userId);
-        return groups.stream().map(groupMapper::toDto).collect(Collectors.toList());
-    }
-    public List<GroupDto> getAllGroupsByCurrentUser() {
+    public List<GroupDto> getAllGroupsByCurrentUser(int page, int size) {
         UUID userId = userService.getCurrentUser().getId();
-        List<Group> groups = groupRepository.findAllByUserUserId(userId);
-        return groups.stream().map(groupMapper::toDto).collect(Collectors.toList());
-    }
-
-    public List<GroupDto> getAllGroups() {
-        List<Group> groups = groupRepository.findAll();
-        return groups.stream().map(groupMapper::toDto).collect(Collectors.toList());
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by("name").ascending());
+        Page<Group> groupsPage = groupRepository.findAllByUserUserId(userId, pageRequest);
+        return groupsPage.getContent().stream()
+                .map(groupMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     // Private helper methods
@@ -151,6 +181,7 @@ public class GroupService {
         return groupRepository.findById(groupId)
                 .orElseThrow(() -> new NotFoundException("Group not found with ID: " + groupId));
     }
+
     private Group getGroupByGroupName(String groupName) {
         return groupRepository.findByName(groupName)
                 .orElseThrow(() -> new NotFoundException("Group not found with Name: " + groupName));

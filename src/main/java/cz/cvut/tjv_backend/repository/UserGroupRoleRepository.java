@@ -4,6 +4,8 @@ import cz.cvut.tjv_backend.entity.Group;
 import cz.cvut.tjv_backend.entity.User;
 import cz.cvut.tjv_backend.entity.UserGroupRole;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -26,4 +28,8 @@ public interface UserGroupRoleRepository extends JpaRepository<UserGroupRole, UU
     void deleteByUserIdAndGroupId(@Param("userId") UUID userId, @Param("groupId") UUID groupId);
 
     Optional<UserGroupRole> findByUserIdAndGroupId(UUID userId, UUID group);
+
+
+    @Query("SELECT ugr.user FROM UserGroupRole ugr WHERE ugr.group.id = :groupId")
+    Page<User> findUsersByGroupId(UUID groupId, Pageable pageable);
 }

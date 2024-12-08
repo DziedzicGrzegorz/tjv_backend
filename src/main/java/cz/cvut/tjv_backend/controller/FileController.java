@@ -59,8 +59,8 @@ public class FileController {
             @ApiResponse(responseCode = "404", description = "File not found", content = @Content),
             @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content)
     })
-    public ResponseEntity<FileDto> updateFile(@PathVariable UUID fileId, @RequestParam UUID userId, @RequestParam MultipartFile updatedFile) {
-        return ResponseEntity.ok(fileService.updateFile(userId, fileId, updatedFile));
+    public ResponseEntity<FileDto> updateFile(@PathVariable UUID fileId, @RequestParam MultipartFile updatedFile) {
+        return ResponseEntity.ok(fileService.updateFile(fileId, updatedFile));
     }
 
     @DeleteMapping("/{fileId}")

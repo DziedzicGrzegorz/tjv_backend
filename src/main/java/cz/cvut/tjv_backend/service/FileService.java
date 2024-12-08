@@ -49,7 +49,9 @@ public class FileService {
         return fileMapper.toDto(savedFile);
     }
 
-    public FileDto updateFile(UUID userId, UUID fileId, MultipartFile updatedFile) {
+    public FileDto updateFile(UUID fileId, MultipartFile updatedFile) {
+        UserDto currentUser = userService.getCurrentUser();
+        UUID userId = currentUser.getId();
         File existingFile = findFileById(fileId);
 
         validateFileOwnership(existingFile, userId);
