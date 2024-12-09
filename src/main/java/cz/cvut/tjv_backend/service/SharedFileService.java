@@ -85,38 +85,7 @@ public class SharedFileService {
         return sharedFileWithGroupMapper.toDto(savedSharedFile);
     }
 
-    private File getFileById(UUID fileId) {
-        return fileRepository.findById(fileId)
-                .orElseThrow(() -> new NotFoundException("File not found with ID: " + fileId));
-    }
 
-    private Group getGroupById(UUID groupId) {
-        return groupRepository.findById(groupId)
-                .orElseThrow(() -> new NotFoundException("Group not found with ID: " + groupId));
-    }
-
-    private void validateUserMembershipInGroup(UUID userId, UUID groupId) {
-        boolean isMember = userGroupRoleRepository.existsByUserIdAndGroupId(userId, groupId);
-        if (!isMember) {
-            throw new NotFoundException("User with ID " + userId + " is not a member of group with ID " + groupId);
-        }
-    }
-
-    private void ensureFileNotAlreadyShared(UUID fileId, UUID groupId) {
-        boolean isAlreadyShared = sharedFileWithGroupRepository.existsByFileIdAndGroupId(fileId, groupId);
-        if (isAlreadyShared) {
-            throw new FileAlreadySharedException("File with ID " + fileId + " is already shared with group ID " + groupId);
-        }
-    }
-
-    private SharedFileWithGroup createSharedFileWithGroup(File file, Group group, String permission) {
-        return SharedFileWithGroup.builder()
-                .file(file)
-                .group(group)
-                .permission(permission)
-                .sharedAt(LocalDateTime.now())
-                .build();
-    }
 
     // Retrieve shared file with user by ID
     public List<SharedFileWithUserDto> getSharedFilesWithUser(UUID userId) {
@@ -171,5 +140,62 @@ public class SharedFileService {
                         "Shared file not found for fileId: " + fileId + " and groupId: " + groupId));
 
         sharedFileWithGroupRepository.delete(sharedFile);
+    }
+    // New Service Method 1: Get all files shared by current user with users
+    public List<SharedFileWithUserDto> getSharedFilesByCurrentUserWithUsers() {
+        UserDto currentUser = userService.getCurrentUser();
+        UUID userId = currentUser.getId();
+        List<SharedFileWithUser> sharedFiles = sharedFileWithUserRepository.findAllByFileOwnerId(userId);
+        return sharedFiles.stream()
+                .map(sharedFileWithUserMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    // New Service Method 2: Get all files shared by current user with groups
+    public List<SharedFileWithGroupDto> getSharedFilesByCurrentUserWithGroups() {
+        UserDto currentUser = userService.getCurrentUser();
+        UUID userId = currentUser.getId();
+        List<SharedFileWithGroup> sharedFiles = sharedFileWithGroupRepository.findAllByFileOwnerId(userId);
+        return sharedFiles.stream()
+                .map(sharedFileWithGroupMapper::toDto)
+                .collect(Collectors.toList());
+    }
+    public List<SharedFileWithUserDto> getSharedUsersByFileId(UUID fileId) {
+        List<SharedFileWithUser> sharedFiles = sharedFileWithUserRepository.findAllByFileId(fileId);
+        return sharedFiles.stream()
+                .map(sharedFileWithUserMapper::toDto)
+                .collect(Collectors.toList());
+    }
+    private File getFileById(UUID fileId) {
+        return fileRepository.findById(fileId)
+                .orElseThrow(() -> new NotFoundException("File not found with ID: " + fileId));
+    }
+
+    private Group getGroupById(UUID groupId) {
+        return groupRepository.findById(groupId)
+                .orElseThrow(() -> new NotFoundException("Group not found with ID: " + groupId));
+    }
+
+    private void validateUserMembershipInGroup(UUID userId, UUID groupId) {
+        boolean isMember = userGroupRoleRepository.existsByUserIdAndGroupId(userId, groupId);
+        if (!isMember) {
+            throw new NotFoundException("User with ID " + userId + " is not a member of group with ID " + groupId);
+        }
+    }
+
+    private void ensureFileNotAlreadyShared(UUID fileId, UUID groupId) {
+        boolean isAlreadyShared = sharedFileWithGroupRepository.existsByFileIdAndGroupId(fileId, groupId);
+        if (isAlreadyShared) {
+            throw new FileAlreadySharedException("File with ID " + fileId + " is already shared with group ID " + groupId);
+        }
+    }
+
+    private SharedFileWithGroup createSharedFileWithGroup(File file, Group group, String permission) {
+        return SharedFileWithGroup.builder()
+                .file(file)
+                .group(group)
+                .permission(permission)
+                .sharedAt(LocalDateTime.now())
+                .build();
     }
 }

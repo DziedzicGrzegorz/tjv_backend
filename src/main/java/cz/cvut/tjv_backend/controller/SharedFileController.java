@@ -53,7 +53,7 @@ public class SharedFileController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdSharedFile);
     }
     @GetMapping("/user")
-    @Operation(summary = "Get files shared with a user", description = "Retrieves all files shared with a specific user.")
+    @Operation(summary = "Get files shared with a user", description = "Retrieves all files shared with a current user.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Files retrieved successfully", content = @Content(schema = @Schema(implementation = SharedFileWithUserDto[].class))),
             @ApiResponse(responseCode = "404", description = "User not found", content = @Content)
@@ -112,4 +112,49 @@ public class SharedFileController {
         sharedFileService.deleteSharedFileWithGroup(groupId, fileId);
         return ResponseEntity.noContent().build();
     }
+    // New Endpoint 1: Get all files shared by current user with users
+    @GetMapping("/user/shared-by-me")
+    @Operation(summary = "Get files shared by current user with users", description = "Retrieves all files that the current user has shared with other users.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Files retrieved successfully", content = @Content(schema = @Schema(implementation = SharedFileWithUserDto[].class))),
+            @ApiResponse(responseCode = "404", description = "No shared files found", content = @Content)
+    })
+    public ResponseEntity<List<SharedFileWithUserDto>> getSharedFilesByCurrentUserWithUsers() {
+        List<SharedFileWithUserDto> sharedFiles = sharedFileService.getSharedFilesByCurrentUserWithUsers();
+        if (sharedFiles.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(sharedFiles);
+    }
+
+    // New Endpoint 2: Get all files shared by current user with groups
+    @GetMapping("/group/shared-by-me")
+    @Operation(summary = "Get files shared by current user with groups", description = "Retrieves all files that the current user has shared with groups.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Files retrieved successfully", content = @Content(schema = @Schema(implementation = SharedFileWithGroupDto[].class))),
+            @ApiResponse(responseCode = "404", description = "No shared files found", content = @Content)
+    })
+    public ResponseEntity<List<SharedFileWithGroupDto>> getSharedFilesByCurrentUserWithGroups() {
+        List<SharedFileWithGroupDto> sharedFiles = sharedFileService.getSharedFilesByCurrentUserWithGroups();
+        if (sharedFiles.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(sharedFiles);
+    }
+    // New Endpoint 3: Get all users that a file is shared with
+    @GetMapping("/file/{fileId}/users")
+    @Operation(summary = "Get users a file is shared with", description = "Retrieves all users that a specific file is shared with.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Users retrieved successfully", content = @Content(schema = @Schema(implementation = UUID[].class))),
+            @ApiResponse(responseCode = "404", description = "File not found or not shared", content = @Content)
+    })
+    public ResponseEntity<List<SharedFileWithUserDto>> getUsersSharedWithFile(
+            @PathVariable @Parameter(description = "Unique ID of the file") UUID fileId) {
+        List<SharedFileWithUserDto> users = sharedFileService.getSharedUsersByFileId(fileId);
+        if (users.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(users);
+    }
+
 }
