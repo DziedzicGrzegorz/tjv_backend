@@ -166,6 +166,13 @@ public class SharedFileService {
                 .map(sharedFileWithUserMapper::toDto)
                 .collect(Collectors.toList());
     }
+    //getSharedGroupsByFileId
+    public List<SharedFileWithGroupDto> getSharedGroupsByFileId(UUID fileId) {
+        List<SharedFileWithGroup> sharedFiles = sharedFileWithGroupRepository.findAllByFileId(fileId);
+        return sharedFiles.stream()
+                .map(sharedFileWithGroupMapper::toDto)
+                .collect(Collectors.toList());
+    }
     private File getFileById(UUID fileId) {
         return fileRepository.findById(fileId)
                 .orElseThrow(() -> new NotFoundException("File not found with ID: " + fileId));

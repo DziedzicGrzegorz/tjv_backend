@@ -22,5 +22,7 @@ public interface SharedFileWithGroupRepository extends JpaRepository<SharedFileW
     boolean existsByFileIdAndGroupId(UUID fileId, UUID groupId);
     @Query("SELECT s FROM SharedFileWithGroup s WHERE s.file.owner.id = :ownerId")
     List<SharedFileWithGroup> findAllByFileOwnerId(UUID ownerId);
+
+   List<SharedFileWithGroup> findAllByFileId(UUID fileId);
 }
 

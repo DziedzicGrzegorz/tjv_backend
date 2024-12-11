@@ -156,5 +156,20 @@ public class SharedFileController {
         }
         return ResponseEntity.ok(users);
     }
+    //get all groups that a file is shared with
+    @GetMapping("/file/{fileId}/groups")
+    @Operation(summary = "Get groups a file is shared with", description = "Retrieves all groups that a specific file is shared with.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Groups retrieved successfully", content = @Content(schema = @Schema(implementation = UUID[].class))),
+            @ApiResponse(responseCode = "404", description = "File not found or not shared", content = @Content)
+    })
+    public ResponseEntity<List<SharedFileWithGroupDto>> getGroupsSharedWithFile(
+            @PathVariable @Parameter(description = "Unique ID of the file") UUID fileId) {
+        List<SharedFileWithGroupDto> groups = sharedFileService.getSharedGroupsByFileId(fileId);
+        if (groups.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(groups);
+    }
 
 }
