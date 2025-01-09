@@ -10,6 +10,9 @@ import org.mapstruct.*;
 public interface GroupMapper {
     Group toEntity(GroupDto groupDto);
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "userRoles", ignore = true)
+    @Mapping(target = "sharedFiles", ignore = true)
     Group toEntityFromCreateGroupDto(CreateGroupRequest createGroupRequest);
 
     GroupDto toDto(Group group);

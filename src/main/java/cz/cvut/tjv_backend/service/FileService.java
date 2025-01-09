@@ -1,6 +1,7 @@
 package cz.cvut.tjv_backend.service;
 
 import cz.cvut.tjv_backend.dto.file.FileDto;
+import cz.cvut.tjv_backend.dto.user.UserDto;
 import cz.cvut.tjv_backend.entity.File;
 import cz.cvut.tjv_backend.entity.User;
 import cz.cvut.tjv_backend.exception.Exceptions.*;
@@ -33,7 +34,9 @@ public class FileService {
         return fileMapper.toDto(file);
     }
 
-    public FileDto saveFile(UUID ownerId, MultipartFile file) {
+    public FileDto saveFile(MultipartFile file) {
+        UserDto currentUser = userService.getCurrentUser();
+        UUID ownerId = currentUser.getId();
         User owner = userService.findUserById(ownerId);
         UUID fileId = UUID.randomUUID();
         String blobPath = buildBlobPath(ownerId, fileId);
@@ -46,7 +49,9 @@ public class FileService {
         return fileMapper.toDto(savedFile);
     }
 
-    public FileDto updateFile(UUID userId, UUID fileId, MultipartFile updatedFile) {
+    public FileDto updateFile(UUID fileId, MultipartFile updatedFile) {
+        UserDto currentUser = userService.getCurrentUser();
+        UUID userId = currentUser.getId();
         File existingFile = findFileById(fileId);
 
         validateFileOwnership(existingFile, userId);
@@ -77,8 +82,9 @@ public class FileService {
         fileRepository.deleteAll(files);
     }
 
-    public List<FileDto> getAllFilesByUser(UUID userId) {
-        userService.getUserById(userId);
+    public List<FileDto> getAllFilesByUser() {
+        UserDto currentUser = userService.getCurrentUser();
+        UUID userId = currentUser.getId();
         List<File> files = fileRepository.findFilesByOwnerId(userId);
         return mapFilesToDto(files);
     }
