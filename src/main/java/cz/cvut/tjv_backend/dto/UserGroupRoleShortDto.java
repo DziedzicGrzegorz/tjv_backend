@@ -1,5 +1,6 @@
 package cz.cvut.tjv_backend.dto;
 
+import cz.cvut.tjv_backend.dto.user.UserShortDto;
 import cz.cvut.tjv_backend.entity.utils.Role;
 import lombok.Value;
 
@@ -15,4 +16,5 @@ public class UserGroupRoleShortDto implements Serializable {
     UUID id;
     Role role;
     LocalDateTime joinedAt;
+    UserShortDto user;
 }

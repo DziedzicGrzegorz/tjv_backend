@@ -1,6 +1,8 @@
 package cz.cvut.tjv_backend.repository;
 
 import cz.cvut.tjv_backend.entity.Group;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -23,4 +25,8 @@ public interface GroupRepository extends JpaRepository<Group, UUID> {
     @Query("SELECT g FROM Group g JOIN g.userRoles ugr WHERE ugr.user.id = :userId")
     List<Group> findAllByUserUserId(@Param("userId") UUID userId);
 
+
+    // Paginated version
+    @Query("SELECT g FROM Group g JOIN g.userRoles ugr WHERE ugr.user.id = :userId")
+    Page<Group> findAllByUserUserId(@Param("userId") UUID userId, Pageable pageable);
 }

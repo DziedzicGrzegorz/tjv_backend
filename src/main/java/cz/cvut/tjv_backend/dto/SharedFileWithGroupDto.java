@@ -1,6 +1,7 @@
 package cz.cvut.tjv_backend.dto;
 
 import cz.cvut.tjv_backend.dto.file.FileDto;
+import cz.cvut.tjv_backend.dto.group.ShortGroupDto;
 import cz.cvut.tjv_backend.entity.SharedFileWithGroup;
 import lombok.Value;
 
@@ -17,4 +18,5 @@ public class SharedFileWithGroupDto implements Serializable {
     FileDto file;
     String permission;
     LocalDateTime sharedAt;
+    ShortGroupDto group;
 }
