@@ -166,9 +166,7 @@ public class SharedFileController {
     public ResponseEntity<List<SharedFileWithGroupDto>> getGroupsSharedWithFile(
             @PathVariable @Parameter(description = "Unique ID of the file") UUID fileId) {
         List<SharedFileWithGroupDto> groups = sharedFileService.getSharedGroupsByFileId(fileId);
-        if (groups.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+
         return ResponseEntity.ok(groups);
     }
 

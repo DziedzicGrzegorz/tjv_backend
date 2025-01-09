@@ -169,6 +169,9 @@ public class SharedFileService {
     //getSharedGroupsByFileId
     public List<SharedFileWithGroupDto> getSharedGroupsByFileId(UUID fileId) {
         List<SharedFileWithGroup> sharedFiles = sharedFileWithGroupRepository.findAllByFileId(fileId);
+        if (sharedFiles.isEmpty()) {
+            throw new NotFoundException("No groups shared with file ID: " + fileId);
+        }
         return sharedFiles.stream()
                 .map(sharedFileWithGroupMapper::toDto)
                 .collect(Collectors.toList());
