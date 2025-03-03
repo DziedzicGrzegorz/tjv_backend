@@ -1,93 +1,218 @@
-# TJV_BACKEND
+# File Sharing System Backend
 
+A Spring Boot backend application for a secure file sharing system with user and group-based access control.
 
+## Overview
 
-## Getting started
+This application serves as a backend for a file sharing platform that allows users to:
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+- Upload and manage files
+- Share files with individual users
+- Create and manage groups
+- Share files with groups
+- Control access permissions
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## Entity Structure
 
-## Add your files
+### Core Entities
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+- **User**: Manages authentication and user details
+- **File**: Represents uploaded files with metadata
+- **Group**: Represents user groups for sharing
+- **UserGroupRole**: Manages user roles within groups
+- **SharedFileWithUser**: Tracks file sharing with individual users
+- **SharedFileWithGroup**: Tracks file sharing with groups
+
+### Entity Relationships
+
+- Users can upload files (owner relationship)
+- Files can be shared with individual users with specific permissions
+- Users can form groups with different roles (admin, member, etc.)
+- Files can be shared with groups with specific permissions
+
+## Technical Details
+
+### Technology Stack
+
+- **Framework**: Spring Boot
+- **Database**: JPA/Hibernate with PostgreSQL
+- **Security**: Spring Security
+- **Build Tool**: Maven/Gradle
+- **Documentation**:Swagger
+
+### Key Features
+
+- **Secure Authentication**: JWT-based authentication
+- **Role-based Access Control**: Different permission levels
+- **Version Control**: File versioning support
+- **Efficient Storage**: Azure Blob Storage integration
+- **API Documentation**: Swagger/OpenAPI integration
+- **Large File Support**: Up to 50MB file uploads
+
+## Getting Started
+
+### Prerequisites
+
+- Java 17 or higher
+- Maven or Gradle
+- PostgreSQL database
+- Azure Storage account (for file blob storage)
+- Environment with necessary configuration parameters
+
+### Installation
+
+1. Clone the repository:
+```
+git clone https://gitlab.fit.cvut.cz/dziedgrz/tjv_backend.git
+cd tjv_backend
+```
+
+2. Configure the application by filling in the necessary values in `application.properties`:
+
+```properties
+# Database Configuration
+spring.datasource.url=jdbc:postgresql://localhost:5432/your_database
+spring.datasource.username=your_username
+spring.datasource.password=your_password
+
+# Azure Storage Configuration (for file blob storage)
+azure.storage.connection.string=your_azure_connection_string
+azure.storage.container.name=your_container_name
+azure.storage.queue.name=your_queue_name
+
+# JWT Security Configuration
+application.security.jwt.secret-key=your_jwt_secret_key
+application.security.jwt.access_expiration=3600000
+application.security.jwt.refresh_expiration=86400000
+```
+
+3. Build the project:
+```
+mvn clean install
+```
+
+4. Run the application:
+```
+mvn spring-boot:run
+```
+
+### API Documentation
+
+Once the application is running, access the API documentation at:
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
+- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
+
+## Development
+
+### Project Structure
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.fit.cvut.cz/dziedgrz/tjv_backend.git
-git branch -M main
-git push -uf origin main
+src/main/java/cz/cvut/tjv_backend/
+├── TjvBackendApplication.java       # Main application entry point
+├── authConfig/                      # Authentication and security configuration
+│   ├── CustomAuthenticationEntryPoint.java
+│   ├── JwtFilter.java              
+│   ├── SecurityConfig.java          # Spring Security configuration
+│   ├── SecurityConstants.java       # Security constants and public endpoints
+│   └── TOKEN_TYPE.java              # Token type enum (ACCESS, REFRESH)
+├── config/                          # Application configuration
+│   ├── BeansConfig.java             # Bean definitions
+│   └── OpenAPIConfig.java           # Swagger/OpenAPI configuration
+├── controller/                      # REST API controllers
+│   ├── AuthenticationController.java # Authentication endpoints
+│   ├── FileController.java          # File management endpoints
+│   ├── GroupController.java         # Group management endpoints
+│   ├── SharedFileController.java    # File sharing endpoints  
+│   └── UserController.java          # User management endpoints
+├── dto/                             # Data Transfer Objects
+│   ├── file/                        # File-related DTOs
+│   ├── group/                       # Group-related DTOs
+│   ├── user/                        # User-related DTOs
+│   ├── userGroup/                   # User-group relationship DTOs
+│   └── ...                          # Other DTOs for data transfer
+├── entity/                          # JPA entities (database models)
+│   ├── File.java                    # File entity
+│   ├── Group.java                   # Group entity 
+│   ├── SharedFileWithGroup.java     # File sharing with group relationship
+│   ├── SharedFileWithUser.java      # File sharing with user relationship
+│   ├── User.java                    # User entity
+│   ├── UserGroupRole.java           # User-group role relationship
+│   └── utils/                       # Entity utility classes and enums
+├── exception/                       # Exception handling
+│   ├── ErrorResponse.java           # Standardized error response model
+│   ├── Exceptions.java              # Custom exception definitions
+│   └── GlobalExceptionHandler.java  # Global exception handler
+├── mapper/                          # Object mappers
+│   ├── FileMapper.java              # File entity/DTO mapping
+│   ├── GroupMapper.java             # Group entity/DTO mapping
+│   ├── SharedFileWithGroupMapper.java
+│   ├── SharedFileWithUserMapper.java
+│   └── UserMapper.java              # User entity/DTO mapping
+├── repository/                      # Spring Data JPA repositories
+│   ├── FileRepository.java          # File data access
+│   ├── GroupRepository.java         # Group data access
+│   ├── SharedFileWithGroupRepository.java
+│   ├── SharedFileWithUserRepository.java
+│   ├── UserGroupRoleRepository.java 
+│   └── UserRepository.java          # User data access
+├── request/                         # Request models
+│   ├── auth/                        # Authentication requests
+│   ├── ChangePasswordRequest.java
+│   ├── CreateGroupRequest.java
+│   ├── FileSharingWithGroupRequest.java
+│   ├── FileSharingWithUserRequest.java
+│   └── ...                          # Other request models
+├── service/                         # Business logic services
+│   ├── AuthenticationService.java   # Authentication functionality
+│   ├── FileService.java             # File management functionality
+│   ├── GroupService.java            # Group management functionality
+│   ├── JwtService.java              # JWT handling
+│   ├── SharedFileService.java       # File sharing functionality
+│   └── UserService.java             # User management functionality
+└── storage/                         # External storage integration
+    ├── AzureBlobStorageService.java # Azure Blob Storage implementation
+    ├── azure/                       # Azure configuration
+    └── interfaces/                  # Storage service interfaces
 ```
 
-## Integrate with your tools
+### Database Schema
 
-- [ ] [Set up project integrations](https://gitlab.fit.cvut.cz/dziedgrz/tjv_backend/-/settings/integrations)
+The application uses the following database tables:
+- `users`
+- `files`
+- `groups`
+- `user_group_roles`
+- `shared_files_with_user`
+- `shared_files`
 
-## Collaborate with your team
+## Testing
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+Run the tests with:
+```
+mvn test
+```
 
-## Test and Deploy
+## Deployment
 
-Use the built-in continuous integration in GitLab.
+The application can be deployed as a JAR file or Docker container.
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+### Docker
 
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+```
+docker build -t tjv-backend .
+docker run -p 8080:8080 tjv-backend
+```
 
 ## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+1. Create a feature branch
+2. Commit your changes
+3. Push your branch and submit a merge request
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- Faculty of Information Technology, Czech Technical University in Prague
